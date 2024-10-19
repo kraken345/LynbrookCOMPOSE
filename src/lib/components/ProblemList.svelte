@@ -42,7 +42,8 @@
 		"average_quality",
 		"status",
 		"feedback_status",
-		"problem_tests"
+		"problem_tests",
+		"created_at"
 	];
 
 	const dispatch = createEventDispatcher();
