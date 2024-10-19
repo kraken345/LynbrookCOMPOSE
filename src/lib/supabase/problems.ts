@@ -89,7 +89,7 @@ export async function getProblems(options: ProblemSelectRequest = {}) {
 	let {
 		customSelect = "*",
 		customOrder = null,
-		customEq = {},
+		customEq = {"archived": false},
 		normal = true,
 		archived = false,
 		after = null,
