@@ -93,6 +93,14 @@
 					>
 						<p class="linkPara">Give Feedback</p>
 					</Link>
+					{#if userRole >= 33}
+						<Link
+							href="/problems/endorse"
+							class={path == "problems/endorse" ? "active link" : "link"}
+						>
+							<p class="linkPara">Endorse Problems</p>
+						</Link>
+					{/if}
 					<Link href="/tests" class={path == "tests" ? "active link" : "link"}>
 						<p class="linkPara">View Tests</p>
 					</Link>

@@ -17,7 +17,7 @@
 	import toast from "svelte-french-toast";
 	import { handleError } from "$lib/handleError.ts";
 	import {
-		addProblemTestsolveAnswer,
+		addProblemFeedback,
 		getProblemFeedback,
 		updateTestsolveAnswer,
 	} from "$lib/supabase";
@@ -179,7 +179,7 @@
 			answer == "" ? (answer = null) : (answer = answer);
 			console.log("QUAL", quality);
 			console.log("DIFF", difficulty);
-			await addProblemTestsolveAnswer([
+			await addProblemFeedback([
 				{
 					solver_id: solver_id,
 					problem_id: problem_id,

@@ -18,6 +18,15 @@
 		thisUser = await getThisUser();
 	})();
 
+	let roleDictionary = {
+		0: "No role assigned",
+		10: "No permissions",
+		20: "Problem Contributor",
+		30: "Problem Writer",
+		33: "Endorser",
+		40: "Administrator",
+	};
+
 	async function fetchUser() {
 		try {
 			let userInfo = await getUser(userId);
@@ -67,11 +76,9 @@
 		</p>
 		<FormGroup disabled={userId === thisUser.id}>
 			<Select labelText="Role" bind:selected={user.role}>
-				<SelectItem value="0" text="No role assigned (0)" />
-				<SelectItem value="10" text="No permissions (10)" />
-				<SelectItem value="20" text="Problem Contributor (20)" />
-				<SelectItem value="30" text="Problem Writer (30)" />
-				<SelectItem value="40" text="Administrator (40)" />
+				{#each Object.entries(roleDictionary) as [key, value]}
+					<SelectItem value={key} text={value + " (" + key + ")"} />
+				{/each}
 			</Select>
 			<br />
 			<ModalButton
