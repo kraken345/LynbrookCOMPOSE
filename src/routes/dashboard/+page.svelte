@@ -15,6 +15,7 @@
 		getImages,
 		getProblemCounts,
 		getThisUser,
+        getThisUserRole,
 		getProblems,
 		getProblemFeedback,
 	} from "$lib/supabase";
@@ -75,7 +76,8 @@
 	let problemCounts = [];
 	let width = 0;
 	let loaded = false;
-	let userId;
+	let user;
+    let userRole;
 
 	let openModal = false;
 	let values = ["Problems", "Answers", "Solutions", "Comments"];
@@ -90,12 +92,15 @@
 
 	(async () => {
 		try {
-			all_problems = await getProblems({ customSelect: "*" });
+            user = (await getThisUser());
+            userRole = await getThisUserRole();
+			all_problems = await getProblems({ customEq: {"author_id": user.id} });
 			console.log("PROBLEMS", problems);
 			console.log(scheme.progress.after);
 			time_filtered_problems = await getProblems({
 				after: new Date(scheme.progress.after),
 				before: new Date(scheme.progress.before),
+                customEq: {"author_id": user.id} 
 			});
 			console.log(time_filtered_problems.length);
 
@@ -130,7 +135,7 @@
 				sortedObj[key] = topicsCount[key];
 				return sortedObj;
 			}, {});
-			userId = (await getThisUser()).id;
+			
 			//getProblemLink();
 			resetProblems();
 			loaded = true;
@@ -301,7 +306,7 @@
 <svelte:window bind:outerWidth={width} />
 
 <br />
-<h1>Problem Inventory</h1>
+<h1>Your Dashboard</h1>
 {#if !loaded}
 	<p>Loading problems...</p>
 {/if}
@@ -309,11 +314,17 @@
 <div style="margin-top: 10px;">
 	<Button title="Create a new problem" href="/problems/new" />
 </div>
+{#if userRole >= 30}
+    <div style="margin-top: 10px;">
+        <Button title="Problem Inventory" href="/problems" />
+    </div>
+{/if}
 <br />
 <div class="flex">
 	<div class="stats">
-		<h4><u>Stats</u></h4>
-		{#if loaded}
+		<h4><u>Your Stats</u></h4>
+		{#if loaded && false}
+            /**
 			<ProgressBar
 				value={time_filtered_problems.length}
 				max={scheme.progress.goal}
@@ -323,6 +334,7 @@
 					" problems written"}
 				labelText={"Tournament Progress"}
 			/>
+            */
 		{/if}
 		<p>
 			<strong>Number of Problems: {all_problems.length}</strong>
@@ -336,51 +348,18 @@
 		{/each}
 	</div>
 </div>
-<!--
-<Button
-	action={() => {
-		openModal = !openModal;
-	}}
-	title="Download All Problems"
-/>
-<br /><br />
--->
-<!--
-<Button
-	action={() => {
-		problemList.set(
-			problems.filter((problem) => {
-				return problem.author_id == userId;
-			})
-		);
-	}}
-	title="My Problems"
-/>
-<br /><br />-->
-<!--
+<br>
 <ul visibility: hidden>
 	{#each $messages as message}
 		<li>{message.role}: {message.content}</li>
 	{/each}
 </ul>
-<div style="width:80%; margin: auto;margin-bottom: 20px;">
-	<form on:submit={submitWrapper}>
-		<TextArea
-			class="textArea"
-			labelText="Use CASSIE to filter (Beta)!"
-			placeholder="Type some sort of command to filter (e.g. Show me all problems with difficulty harder than 4 and sort it hardest to easiest.). You can build queries off of the previous one."
-			bind:value={$input}
-			required={true}
-		/>
-		<br />
-		<Button type="submit" title="Apply Filter" />
-	</form>
-</div>
-<Button action={resetProblems} title="Clear Filter" />
--->
 <br /><br />
 <div style="width:80%; margin: auto;margin-bottom: 20px;">
-	<ProblemList {problems} />
+	<ProblemList 
+        {problems} 
+        sortKey={"feedback_status"}
+        sortDirection={"ascending"}/>
 </div>
 
 {#if openModal}
@@ -408,7 +387,7 @@
 			{/each}
 
 			<br />
-			<button on:click={openProblemsPDF}>Download Problems</button>
+			<button on:click={openProblemsPDF}>Download Problems</button> 
 			<br /><br />
 		</div>
 	</div>

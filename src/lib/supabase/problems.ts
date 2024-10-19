@@ -89,6 +89,7 @@ export async function getProblems(options: ProblemSelectRequest = {}) {
 	let {
 		customSelect = "*",
 		customOrder = null,
+		customEq = {"archived": false},
 		normal = true,
 		archived = false,
 		after = null,
@@ -102,8 +103,8 @@ export async function getProblems(options: ProblemSelectRequest = {}) {
 	if (customOrder) {
 		selectQuery = selectQuery.order(customOrder);
 	}
-	if (normal) {
-		selectQuery = selectQuery.eq("archived", archived);
+	for (const [key, value] of Object.entries(customEq)) {
+		selectQuery = selectQuery.eq(key, value);
 	}
 	if (after) {
 		selectQuery = selectQuery.gte("created_at", after.toISOString());
@@ -302,12 +303,21 @@ export async function editProblem(
  *
  * @param problem_id number
  */
-export async function archiveProblem(problem_id: number) {
-	const { error } = await supabase
+export async function archiveProblem(problem_id: number, isPublished: boolean = false) {
+	if (isPublished){
+		const { error } = await supabase
 		.from("problems")
-		.update({ archived: true })
+		.update({ archived: true, status: "Published" })
 		.eq("id", problem_id);
-	if (error) throw error;
+		if (error) throw error;
+	}
+	else {
+		const { error } = await supabase
+			.from("problems")
+			.update({ archived: true })
+			.eq("id", problem_id);
+		if (error) throw error;
+	}
 }
 /**
  * Archives a problem. Returns nothing.

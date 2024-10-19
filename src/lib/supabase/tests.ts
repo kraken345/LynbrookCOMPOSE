@@ -290,7 +290,7 @@ export async function archiveTest(test_id: number) {
 		.eq("test_id", test_id);
 	if (error2) throw error2;
 	for (let i of data) {
-		archiveProblem(i.problem_id);
+		archiveProblem(i.problem_id, true);
 	}
 }
 
