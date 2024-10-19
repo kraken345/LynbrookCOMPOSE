@@ -2,7 +2,6 @@
 	import { useChat } from "ai/svelte";
 	import { supabase } from "$lib/supabaseClient";
 	import { get } from "svelte/store";
-	import { problemList } from "$lib/sessionStore.js";
 	import ProblemList from "$lib/components/ProblemList.svelte";
 	import ProgressBar from "$lib/components/ProgressBar.svelte";
 	import Button from "$lib/components/Button.svelte";
@@ -65,13 +64,9 @@
 		onFinish: processLastMessage,
 	});
 
-	let problems;
+	let problems = [];
 
-	problemList.subscribe((value) => {
-		problems = value;
-	});
 
-	let all_problems = [];
 	let time_filtered_problems = [];
 	let problemCounts = [];
 	let width = 0;
@@ -94,8 +89,8 @@
 		try {
             user = (await getThisUser());
             userRole = await getThisUserRole();
-			all_problems = await getProblems({ customEq: {"author_id": user.id} });
-			console.log("PROBLEMS", problems);
+			problems = await getProblems({ customEq: {"author_id": user.id} });
+            sortProblems();
 			console.log(scheme.progress.after);
 			time_filtered_problems = await getProblems({
 				after: new Date(scheme.progress.after),
@@ -104,11 +99,7 @@
 			});
 			console.log(time_filtered_problems.length);
 
-			if (!problems.length) {
-				problemList.set([...all_problems]);
-				console.log("PROBLEMLIST", get(problemList));
-			}
-			const topicsCount = all_problems.reduce((count, { topics }) => {
+			const topicsCount = problems.reduce((count, { topics }) => {
 				let individualTopics;
 				if (topics) {
 					individualTopics = topics.split(", ").map((topic) => topic.trim());
@@ -136,18 +127,12 @@
 				return sortedObj;
 			}, {});
 			
-			//getProblemLink();
-			resetProblems();
 			loaded = true;
 		} catch (error) {
 			handleError(error);
 			toast.error(error.message);
 		}
 	})();
-
-	function resetProblems() {
-		problemList.set([...all_problems]);
-	}
 
 	function submitWrapper(e) {
 		loaded = false;
@@ -185,7 +170,7 @@
 				const result = asyncFunction(supabase)
 					.then((result) => {
 						console.log(result);
-						problemList.set(result);
+						problems = result;
 						console.log("Async code execution completed.");
 					})
 					.catch((error) => {
@@ -200,6 +185,21 @@
 		}
 
 		loaded = true;
+	}
+
+    function sortProblems() {
+        console.log("SORTING")
+		const statusOrder = ['Archived', 'Published', 'Draft', 'Idea', 'Endorsed', 'On Test'];
+		const stageOrder = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Complete'];
+		problems = problems.sort((a, b) => {
+			const statusComparison = statusOrder.indexOf(b.status) - statusOrder.indexOf(a.status);
+            console.log(statusComparison)
+			if (statusComparison !== 0) {
+				return statusComparison; // Sort by status first
+			}
+			// If statuses are equal, sort by stage in descending order
+			return stageOrder.indexOf(b.feedback_status) - stageOrder.indexOf(a.feedback_status);
+		});
 	}
 
 	async function getBucketPaths(path) {
@@ -337,7 +337,7 @@
             */
 		{/if}
 		<p>
-			<strong>Number of Problems: {all_problems.length}</strong>
+			<strong>Number of Problems: {problems.length}</strong>
 		</p>
 		{#each Object.entries(problemCounts) as [cat, count]}
 			<p>
@@ -354,7 +354,7 @@
 		<li>{message.role}: {message.content}</li>
 	{/each}
 </ul>
-<br /><br />
+<br />
 <div style="width:80%; margin: auto;margin-bottom: 20px;">
 	<ProblemList 
         {problems} 

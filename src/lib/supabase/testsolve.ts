@@ -637,7 +637,7 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 /**
  * Gets a random problem
  */
-export async function getRandomProblem(activeUserId) {
+export async function getRandomProblems(activeUserId) {
 	try{
 
 		let { data: feedback, error } = await supabase
@@ -661,16 +661,17 @@ export async function getRandomProblem(activeUserId) {
 		
 		if (problems.length === 0) {
 			console.log('No eligible problems found.');
-			return null; // nothing found
+			return []; // nothing found
 		}
 		  //Find problem with the least feedback count
-		problems.sort((a, b) => a.feedback_count - b.feedback_count);
-		  
-		//If there are multiple problems with the least feedback, select one randomly
-		const leastFeedbackProblems = problems.filter(problem => problem.feedback_count === problems[0].feedback_count);
-		const randomProblem = leastFeedbackProblems[Math.floor(Math.random() * leastFeedbackProblems.length)];
-		console.log("RANDOM PROBLEM", randomProblem)
-		return randomProblem
+		const feedbackStatusOrder = ["Awaiting Feedback", "Awaiting Endorsement", "Awaiting Testsolve", "Needs Review", "Complete"];
+		// Randomize the order of problems
+		problems.sort(() => Math.random() - 0.5);
+		problems.sort((a, b) => {
+			return feedbackStatusOrder.indexOf(a.feedback_status) - feedbackStatusOrder.indexOf(b.feedback_status);
+		});
+
+		return problems
 
 		
 	} catch (error) {
@@ -786,3 +787,4 @@ export async function insertTestsolveFeedbackAnswers(testsolve_data: any[]) {
 		.insert(testsolve_data);
 	if (error) throw error;
 }
+

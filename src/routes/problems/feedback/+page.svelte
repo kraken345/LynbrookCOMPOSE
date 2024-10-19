@@ -5,7 +5,7 @@
     import {
         getProblem,
         getThisUser,
-        getRandomProblem,
+        getRandomProblems,
 	} from "$lib/supabase";
     import { handleError } from "$lib/handleError";
 	import toast from "svelte-french-toast";
@@ -13,7 +13,8 @@
 	let startTime = new Date();
 	let lastTime = startTime;
 	let reviewing = false;
-    let problem;
+    let problems = [];
+    let curIndex = 0;
 	let problemFeedback = {
         problem_id: null,
         quality: null,
@@ -30,12 +31,12 @@
         reviewing = !reviewing;
     }
 
+
+
     const newProblem = () => {
         (async () => {
             loaded = false;
-            console.log("GETTING PROBLEM")
-            problem = await getRandomProblem(user_id);
-            console.log("WHY", problem);
+            curIndex += 1;
             reviewing = !reviewing;
             problemFeedback = {
                 problem_id: null,
@@ -56,14 +57,12 @@
         try {
 			if (!user_id) {
 				user_id = (await getThisUser()).id;
-			}	
+			}
+            problems = await getRandomProblems(user_id);
 		} catch (error) {
 			handleError(error);
 			toast.error(error.message);
 		}
-
-        problem = await getRandomProblem(user_id);
-        console.log("KYU", problem);
         loaded = true;
 
     })();
@@ -80,16 +79,20 @@
                     <Loading/>
                     {:else} 
                     <h4><strong>Give Feedback:</strong></h4>
-                    <div class="problems">
-                        <TestProblems bind:problemFeedback={problemFeedback} {problem} {reviewing} givingFeedback={true}></TestProblems>
-                    </div>
-                    <div class = "submit-button">
-                    {#if !reviewing}
-                        <Button action={changeReviewing} title="Continue" ></Button>
+                    {#if curIndex < problems.length}
+                        <div class="problems">
+                            <TestProblems bind:problemFeedback={problemFeedback} problem={problems[curIndex]} {reviewing} givingFeedback={true}></TestProblems>
+                        </div>
+                        <div class = "submit-button">
+                        {#if !reviewing}
+                            <Button action={changeReviewing} title="Continue" ></Button>
+                        {:else}
+                            <Button action={newProblem} title="Submit" ></Button>
+                        {/if}
+                        </div>
                     {:else}
-                        <Button action={newProblem} title="Submit" ></Button>
+                        <h4><strong>No problems left to review.</strong></h4>
                     {/if}
-                    </div>
                 {/if}
                 <br/>
                 <!--
