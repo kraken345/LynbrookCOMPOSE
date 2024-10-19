@@ -163,7 +163,7 @@
 				} else {
 					console.log("OGSTATUS", originalProblem?.status)
 					console.log(isDraft)
-					const status = (isDraft ? "Draft" : (originalProblem?.status == "Draft" ? "Idea" : originalProblem?.status))
+					const status = (isDraft ? "Draft" : (originalProblem?.status == "Draft" || !originalProblem?.status ? "Idea" : originalProblem?.status))
 					console.log("STATUS", status)
 					const payload = {
 						problem_latex: fields.problem,
