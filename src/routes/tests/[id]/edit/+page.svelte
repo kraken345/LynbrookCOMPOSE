@@ -244,50 +244,46 @@
 				</div>
 			</div>
 		</div>
-		<div class="flex-row">
-			<div class="flex-col">
-				<h3>All Problems</h3>
-				<ProblemList
-					problems={allProblems}
-					selectable
-					showList={[
-						"topics_short",
-						"sub_topics",
-						"problem_tests",
-						"average_difficulty",
-						"average_quality",
-						"unresolved_count",
-					]}
-					bind:selectedItems={selectedAll}
-					disableAll={refreshingProblems}
-				/>
-			</div>
-			<div class="flex-col">
-				<h3>Test Problems</h3>
-				<ProblemList
-					problems={testProblems}
-					selectable
-					draggable
-					sortKey={"problem_number"}
-					sortDirection={"ascending"}
-					pageEnabled={false}
-					showList={[
-						"topics_short",
-						"sub_topics",
-						"problem_tests",
-						"average_difficulty",
-						"average_quality",
-						"unresolved_count",
-					]}
-					bind:selectedItems={selectedTest}
-					disableAll={refreshingProblems}
-					customHeaders={[
-						{ key: "drag", value: "", sort: false },
-						{ key: "problem_number", value: "", icon: "ri-hashtag" },
-					]}
-					on:reorder={handleReorder}
-				/>
-			</div>
+		<div class="flex-col">
+			<h3>Test Problems</h3>
+			<ProblemList
+				problems={testProblems}
+				selectable
+				draggable
+				sortKey={"problem_number"}
+				sortDirection={"ascending"}
+				pageEnabled={false}
+				showList={[
+					"topics_short",
+					"sub_topics",
+					"average_difficulty",
+					"average_quality",
+					"status",
+				]}
+				bind:selectedItems={selectedTest}
+				disableAll={refreshingProblems}
+				customHeaders={[
+					{ key: "drag", value: "", sort: false, width: "50px" },
+					{ key: "problem_number", value: "", icon: "ri-hashtag" },
+				]}
+				on:reorder={handleReorder}
+			/>
+		</div>
+		<div class="flex-col">
+			<h3>All Problems</h3>
+			<ProblemList
+				problems={allProblems}
+				selectable
+				showList={[
+					"topics_short",
+					"sub_topics",
+					"average_difficulty",
+					"average_quality",
+					"status",
+				]}
+				bind:selectedItems={selectedAll}
+				disableAll={refreshingProblems}
+			/>
 		</div>
 	{/if}
 {/if}
