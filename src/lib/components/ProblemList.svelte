@@ -115,7 +115,7 @@
 			icon: "ri-stairs-fill",
 			width: "10%",
 			sort: (a, b) => {
-				const order = ['Draft', 'Idea', 'Endorsed', 'On Test', 'Published'];
+				const order = ['Draft', 'Idea', 'Endorsed', 'On Test', 'Published', 'Archived'];
 				return order.indexOf(a) - order.indexOf(b);
 			}
 		},
@@ -296,6 +296,8 @@
 		]}
 	/>
 </div>
+
+
 
 <div
 	class="flex-dir-col"

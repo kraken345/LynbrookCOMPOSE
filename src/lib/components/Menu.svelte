@@ -85,27 +85,22 @@
 						<p class="linkPara">Problem Inventory</p>
 					</Link>
 					<br />
-					<Link
-						href="/problems/import"
-						class={path == "problems/import" ? "active link" : "link"}
-					>
-						<p class="linkPara">Import Problems</p>
-					</Link>
-					<br />
+					
 					<Link
 						href="/testsolve"
 						class={path == "testsolve" ? "active link" : "link"}
 					>
 						<p class="linkPara">View Testsolves</p>
 					</Link>
+					
+				{/if}
+				{#if userRole >= 30}
 					<Link
 						href="/problems/feedback"
 						class={path == "problems/feedback" ? "active link" : "link"}
 					>
 						<p class="linkPara">Give Feedback</p>
 					</Link>
-				{/if}
-				{#if userRole >= 30}
 					<Link href="/tests" class={path == "tests" ? "active link" : "link"}>
 						<p class="linkPara">View Tests</p>
 					</Link>
@@ -177,6 +172,12 @@
 						class={path == "admin/transfer-problem" ? "active link" : "link"}
 					>
 						<p class="linkPara">Admin: Transfer Problem</p>
+					</Link>
+					<Link
+						href="/problems/import"
+						class={path == "problems/import" ? "active link" : "link"}
+					>
+						<p class="linkPara">Admin: Import Problems</p>
 					</Link>
 					<br />
 					<Link
