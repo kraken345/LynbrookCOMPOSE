@@ -417,6 +417,8 @@
 							<Tag type="green">On Test</Tag>
 						{:else if cell.value == "Published"}
 							<Tag type="purple">Published</Tag>
+						{:else if cell.value == "Archived"}
+							<Tag type="high-contrast">Archived</Tag>
 						{/if}
 					</div>
 				{:else if cell.key === "feedback_status"}
@@ -433,6 +435,8 @@
 							<Tag type="cyan">Awaiting Testsolve</Tag>
 						{:else if cell.value == "Complete"}
 							<Tag type="green">Complete</Tag>
+						{:else if cell.value == "Archived"}
+							<Tag type="high-contrast">Archived</Tag>
 						{/if}
 					</div>
 				{:else if cell.key === "problem_tests"}
