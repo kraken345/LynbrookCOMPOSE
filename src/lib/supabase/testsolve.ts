@@ -654,13 +654,16 @@ export async function getRandomProblems(activeUserId, endorsing = false) {
 				.from('problem_feedback')
 				.select('problem_id')
 				.eq('solver_id', activeUserId)
+				.not('problem_id', 'is', null)
 				.eq('resolved', false);
 			if (error) throw error;
 			feedback = feedback ? `(${feedback.map(f => f.problem_id).join(", ")})` : "()" // Format as (id1, id2, id3)
+			console.log("FEEDBACK", feedback)
 			query = query.not('id', 'in', feedback);
 		}
 		let { data: problems, error2 } = await query
-		
+		console.log("QUERY", query)
+
 		console.log("PROBLEMS", problems)
 
 		if (error2) throw error2;
