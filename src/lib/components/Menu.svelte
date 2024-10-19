@@ -66,6 +66,12 @@
 				{#if userRole >= 20}
 					<div class="fixedHr" />
 					<Link
+						href="/dashboard"
+						class={path == "dashboard" ? "active link" : "link"}
+					>
+						<p class="linkPara">Dashboard</p>
+					</Link>
+					<Link
 						href="/problems/new"
 						class={path == "problems/new" ? "active link" : "link"}
 					>

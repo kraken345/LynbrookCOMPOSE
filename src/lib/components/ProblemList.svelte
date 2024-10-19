@@ -38,10 +38,11 @@
 	export let showList = [
 		"full_name",
 		"topics_short",
-		"sub_topics",
 		"average_difficulty",
 		"average_quality",
 		"status",
+		"feedback_status",
+		"problem_tests"
 	];
 
 	const dispatch = createEventDispatcher();
@@ -108,10 +109,32 @@
 		},
 		{
 			key: "status",
+			value: "Stage",
+			short: "Stage",
+			icon: "ri-stairs-fill",
+			width: "10%",
+			sort: (a, b) => {
+				const order = ['Draft', 'Idea', 'Endorsed', 'On Test', 'Published'];
+				return order.indexOf(a) - order.indexOf(b);
+			}
+		},
+		{
+			key: "feedback_status",
 			value: "Status",
 			short: "Status",
-			icon: "ri-archive-fill",
-			width: "25%"
+			icon: "ri-feedback-fill",
+			width: "10%",
+			sort: (a, b) => {
+				const order = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Complete'];
+				return order.indexOf(a) - order.indexOf(b);
+			}
+		},
+		{
+			key: "problem_tests",
+			value: "Tests",
+			short: "Tests",
+			icon: "ri-file-list-3-fill",
+			width: "15%"
 		},
 		{
 			key: "created_at",
@@ -125,6 +148,7 @@
 			icon: "ri-calendar-todo-fill",
 		},
 	];
+
 
 	$: headersF = headers.filter((row) => showList.includes(row.key));
 	$: curHeaders = [
@@ -248,12 +272,16 @@
 				text: "Avg. Quality",
 			},
 			{
-				id: "unresolved_count",
-				text: "Feedback",
+				id: "status",
+				text: "Stage",
 			},
 			{
-				id: "status",
+				id: "feedback_status",
 				text: "Status",
+			},
+			{
+				id: "problem_tests",
+				text: "Tests",
 			},
 			{
 				id: "created_at",
@@ -382,25 +410,41 @@
 						{#if cell.value == "Draft"}
 							<Tag type="gray">Draft</Tag>
 						{:else if cell.value == "Idea"}
-							<Tag type="cyan">Idea</Tag>
-							{#if row.unresolved_count == 0}
-								{#if row.feedback_count >= 2}
-									<Tag type="teal">Awaiting Endorsement</Tag>
-								{:else}
-									<Tag type="blue">Awaiting Feedback</Tag>
-								{/if}
-							{:else}
-								<Tag type="magenta">Needs Review</Tag>
-							{/if}
+							<Tag type="blue">Idea</Tag>
 						{:else if cell.value == "Endorsed"}
-							<Tag type="green">Endorsed</Tag>
+							<Tag type="cyan">Endorsed</Tag>
+						{:else if cell.value == "On Test"}
+							<Tag type="green">On Test</Tag>
 						{:else if cell.value == "Published"}
 							<Tag type="purple">Published</Tag>
 						{/if}
+					</div>
+				{:else if cell.key === "feedback_status"}
+					<div
+						style="overflow: hidden; display: flex; align-items: flex-start;"
+					>
+						{#if cell.value == "Needs Review"}
+							<Tag type="magenta">Needs Review</Tag>
+						{:else if cell.value == "Awaiting Feedback"}
+							<Tag type="blue">Awaiting Feedback</Tag>
+						{:else if cell.value == "Awaiting Endorsement"}
+							<Tag type="teal">Awaiting Endorsement</Tag>
+						{:else if cell.value == "Awaiting Testsolve"}
+							<Tag type="cyan">Awaiting Testsolve</Tag>
+						{:else if cell.value == "Complete"}
+							<Tag type="green">Complete</Tag>
+						{/if}
+					</div>
+				{:else if cell.key === "problem_tests"}
+					<div
+						style="overflow: hidden; display: flex; align-items: flex-start;"
+					>
 						{#if row.problem_tests && row.problem_tests.length > 0}
 							{#each row.problem_tests.split(", ") as test}
 								<Tag type="warm-gray">{test}</Tag>
 							{/each}
+						{:else}
+							-
 						{/if}
 					</div>
 				{:else}
