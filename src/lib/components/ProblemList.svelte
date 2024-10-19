@@ -8,6 +8,7 @@
 		ToolbarSearch,
 		Pagination,
 		MultiSelect,
+		Tag
 	} from "carbon-components-svelte";
 	import Rating from "$lib/components/Rating.svelte";
 	import { formatDate } from "$lib/formatDate.js";
@@ -40,7 +41,7 @@
 		"sub_topics",
 		"average_difficulty",
 		"average_quality",
-		"unresolved_count",
+		"status",
 	];
 
 	const dispatch = createEventDispatcher();
@@ -60,7 +61,7 @@
 	let pageSize = 25;
 	let page = 1;
 
-	let editHeader = { key: "edit", value: "", width: "30px" };
+	let editHeader = { key: "edit", value: "", width: "50px" };
 
 	let headers = [
 		{
@@ -68,42 +69,49 @@
 			value: "Author",
 			short: "Author",
 			icon: "ri-user-fill",
+			width: "10%"
 		},
 		{
 			key: "topics_short",
 			value: "Topics",
 			short: "Topics",
 			icon: "ri-pie-chart-2-fill",
-		},
-		{
-			key: "problem_tests",
-			value: "Tests",
-			short: "Tests",
-			icon: "ri-archive-fill",
+			width: "15%"
 		},
 		{
 			key: "sub_topics",
 			value: "Subtopics",
 			short: "SubTps",
 			icon: "ri-node-tree",
+			width: "20%"
 		},
 		{
 			key: "average_difficulty",
 			value: "Difficulty",
 			short: "Diff",
 			icon: "ri-bar-chart-2-fill",
+			width: "7%"
 		},
 		{
 			key: "average_quality",
 			value: "Quality",
 			short: "Qlty",
 			icon: "ri-star-fill",
+			width: "7%"
 		},
 		{
 			key: "unresolved_count",
 			value: "Feedback",
 			short: "Fdbk",
 			icon: "ri-flag-fill",
+			width: "10%"
+		},
+		{
+			key: "status",
+			value: "Status",
+			short: "Status",
+			icon: "ri-archive-fill",
+			width: "25%"
 		},
 		{
 			key: "created_at",
@@ -113,7 +121,7 @@
 		},
 		{
 			key: "edited_at",
-			value: "Edit",
+			value: "Edited",
 			icon: "ri-calendar-todo-fill",
 		},
 	];
@@ -232,10 +240,6 @@
 				text: "SubTopic",
 			},
 			{
-				id: "problem_tests",
-				text: "Test Name",
-			},
-			{
 				id: "average_difficulty",
 				text: "Avg. Difficulty",
 			},
@@ -248,6 +252,10 @@
 				text: "Feedback",
 			},
 			{
+				id: "status",
+				text: "Status",
+			},
+			{
 				id: "created_at",
 				text: "Created on",
 			},
@@ -255,6 +263,7 @@
 				id: "edited_at",
 				text: "Edited on",
 			},
+			
 		]}
 	/>
 </div>
@@ -268,6 +277,7 @@
 		size="compact"
 		expandable
 		sortable
+		batchExpansion
 		{sortKey}
 		{sortDirection}
 		{selectable}
@@ -322,14 +332,15 @@
 					<div>
 						{cell.value + 1}
 					</div>
-				{:else if cell.key === "topics"}
-					{console.log(cell.value)}
+				{:else if cell.key === "topics_short"}
 					<div style="overflow: hidden;">
-						{cell.value == null || cell.value == ""
-							? "None"
-							: width > 700
-							? cell.value
-							: mobileFriendly[cell.value]}
+						{#if cell.value == null || cell.value == ""}
+							<Tag type="gray">None</Tag>
+						{:else}
+							{#each cell.value.split(", ") as topic}
+								<Tag type="gray">{topic}</Tag>
+							{/each}
+						{/if}
 					</div>
 				{:else if cell.key === "author"}
 					<div style="overflow: hidden;">
@@ -363,6 +374,34 @@
 							round={2}
 							style="align-items: left"
 						/>
+					</div>
+				{:else if cell.key === "status"}
+					<div
+						style="overflow: hidden; display: flex; align-items: flex-start;"
+					>
+						{#if cell.value == "Draft"}
+							<Tag type="gray">Draft</Tag>
+						{:else if cell.value == "Idea"}
+							<Tag type="cyan">Idea</Tag>
+							{#if row.unresolved_count == 0}
+								{#if row.feedback_count >= 2}
+									<Tag type="teal">Awaiting Endorsement</Tag>
+								{:else}
+									<Tag type="blue">Awaiting Feedback</Tag>
+								{/if}
+							{:else}
+								<Tag type="magenta">Needs Review</Tag>
+							{/if}
+						{:else if cell.value == "Endorsed"}
+							<Tag type="green">Endorsed</Tag>
+						{:else if cell.value == "Published"}
+							<Tag type="purple">Published</Tag>
+						{/if}
+						{#if row.problem_tests && row.problem_tests.length > 0}
+							{#each row.problem_tests.split(", ") as test}
+								<Tag type="warm-gray">{test}</Tag>
+							{/each}
+						{/if}
 					</div>
 				{:else}
 					<div style="overflow: hidden;">

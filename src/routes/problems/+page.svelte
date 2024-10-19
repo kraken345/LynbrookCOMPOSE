@@ -373,7 +373,6 @@
 		<Button type="submit" title="Apply Filter" />
 	</form>
 </div>
-<br />
 <Button action={resetProblems} title="Clear Filter" />
 <br /><br />
 <div style="width:80%; margin: auto;margin-bottom: 20px;">
