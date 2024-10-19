@@ -14,7 +14,7 @@
 		getTestsolveFeedbackAnswers,
 		getProblemFeedback,
 		updateTestsolve,
-		addProblemTestsolveAnswer,
+		addProblemFeedback,
 		updateTestsolveFeedbackAnswers,
 		getOneTestsolve,
 		checkIfTestCoordinator,

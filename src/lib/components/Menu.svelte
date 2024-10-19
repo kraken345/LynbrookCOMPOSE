@@ -78,6 +78,8 @@
 						<p class="linkPara">Write New Problem</p>
 					</Link>
 					<br />
+				{/if}
+				{#if userRole >= 30}
 					<Link
 						href="/problems"
 						class={path == "problems" ? "active link" : "link"}
@@ -85,27 +87,31 @@
 						<p class="linkPara">Problem Inventory</p>
 					</Link>
 					<br />
-					
-					<Link
-						href="/testsolve"
-						class={path == "testsolve" ? "active link" : "link"}
-					>
-						<p class="linkPara">View Testsolves</p>
-					</Link>
-					
-				{/if}
-				{#if userRole >= 30}
 					<Link
 						href="/problems/feedback"
 						class={path == "problems/feedback" ? "active link" : "link"}
 					>
 						<p class="linkPara">Give Feedback</p>
 					</Link>
+					{#if userRole >= 33}
+						<Link
+							href="/problems/endorse"
+							class={path == "problems/endorse" ? "active link" : "link"}
+						>
+							<p class="linkPara">Endorse Problems</p>
+						</Link>
+					{/if}
 					<Link href="/tests" class={path == "tests" ? "active link" : "link"}>
 						<p class="linkPara">View Tests</p>
 					</Link>
 				{/if}
 				{#if userRole >= 10}
+					<Link
+						href="/testsolve"
+						class={path == "testsolve" ? "active link" : "link"}
+					>
+						<p class="linkPara">View Testsolves</p>
+					</Link>
 					<div class="fixedHr" />
 					<Link
 						href="/grading"
