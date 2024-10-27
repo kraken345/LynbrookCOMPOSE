@@ -38,7 +38,7 @@
 			} else {
 				const { topics, problem_files, ...payloadNoTopics } = payload;
 				console.log(payloadNoTopics);
-				const data = await createProblem(payloadNoTopics);
+				const data = await createProblem(payloadNoTopics, topics);
 
 				let problemId = data.id;
 				await insertProblemTopics(problemId, payload.topics);

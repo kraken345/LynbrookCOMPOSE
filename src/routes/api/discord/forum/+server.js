@@ -9,7 +9,7 @@ async function loadSettings() {
     scheme = await fetchSettings(); // Fetch settings from the database
 }
 
-export async function getOrCreateTags(channelId, desiredTags) {
+async function getOrCreateTags(channelId, desiredTags) {
     // Get channel object
     const response = await fetch(`https://discord.com/api/v10/channels/${channelId}`, {
         headers: {

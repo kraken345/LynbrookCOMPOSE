@@ -189,7 +189,14 @@ export async function makeProblemThread(problem: ProblemRequest) {
 		label: "View Problem",
 		url: scheme.url + "/problems/" + problem.id, // The external URL you want to link to
 	};
-	const tagIds = problem.topicArray.map(topic => {})
+	const tagResponse = await fetch("/api/discord/forum", {
+		method: "POST",
+		body: JSON.stringify({
+			channelId: scheme.discord.notifs_forum,
+			tags: problem.topicArray
+		}),
+	})
+	const { tagIds } = await tagResponse.json();
 	console.log("MAKING FETCH");
 	const threadResponse = await fetch("/api/discord/thread", {
 		method: "POST",
@@ -206,6 +213,7 @@ export async function makeProblemThread(problem: ProblemRequest) {
 				],
 			},
 			name: embed.title,
+			applied_tags: tagIds,
 		}),
 	});
 	console.log("THREAD RESPONSE", threadResponse);
@@ -233,7 +241,7 @@ export async function makeProblemThread(problem: ProblemRequest) {
  * @param problem object
  * @returns problem data in database (including id)
  */
-export async function createProblem(problem: ProblemRequest) {
+export async function createProblem(problem: ProblemRequest, topics: string[]) {
 	console.log(problem);
 	let { data, error } = await supabase
 		.from("problems")
@@ -244,6 +252,19 @@ export async function createProblem(problem: ProblemRequest) {
 		throw error;
 	}
 	problem = data[0];
+
+	// Insert topics first
+    await insertProblemTopics(problem.id, topics);
+	
+	// Get topics before creating thread
+    const problem_topics = await getProblemTopics(
+        problem.id,
+        "topic_id,global_topics(topic)"
+    );
+    problem.topicArray = problem_topics.map(
+        (x) => x.global_topics?.topic ?? "Unknown Topic"
+    );
+	
 	console.log("PROBLEM", problem);
 	console.log("DATA", data);
 	await makeProblemThread(problem);
