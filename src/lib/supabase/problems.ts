@@ -189,6 +189,7 @@ export async function makeProblemThread(problem: ProblemRequest) {
 		label: "View Problem",
 		url: scheme.url + "/problems/" + problem.id, // The external URL you want to link to
 	};
+	const tagIds = problem.topicArray.map(topic => {})
 	console.log("MAKING FETCH");
 	const threadResponse = await fetch("/api/discord/thread", {
 		method: "POST",
