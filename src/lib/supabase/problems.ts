@@ -174,17 +174,17 @@ export async function makeProblemThread(problem: ProblemRequest) {
 			},
 			{
 				name: "Answer",
-				value: problem.answer_latex.length > 1023 ? problem.answer_latex.substring(0, 1020) + "..." : problem.answer_latex,
+				value: problem.answer_latex.length > 1019 ? "||" +problem.answer_latex.substring(0, 1016) + "...||" : "||" + problem.answer_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 			{
 				name: "Solution",
-				value: problem.solution_latex.length > 1023 ? problem.solution_latex.substring(0, 1020) + "..." : problem.solution_latex,
+				value: problem.solution_latex.length > 1019 ? "||" +problem.solution_latex.substring(0, 1016) + "...||" : "||" + problem.solution_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 			{
 				name: "Comments",
-				value: problem.comment_latex.length > 1023 ? problem.comment_latex.substring(0, 1020) + "..." : problem.comment_latex,
+				value: problem.comment_latex.length > 1019 ? "||" +problem.comment_latex.substring(0, 1016) + "...||" : "||" + problem.comment_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 		],
