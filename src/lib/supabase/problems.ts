@@ -193,11 +193,17 @@ export async function makeProblemThread(problem: ProblemRequest) {
 			icon_url: scheme.logo, // URL to the footer icon
 		},
 	};
-	const linkButton = {
+	const viewButton = {
 		type: 2, // LINK button component
 		style: 5, // LINK style (5) for external links
 		label: "View Problem",
 		url: scheme.url + "/problems/" + problem.id, // The external URL you want to link to
+	};
+	const solveButton = {
+		type: 2, // LINK button component
+		style: 5, // LINK style (5) for external links
+		label: "Testsolve",
+		url: scheme.url + "/problems/" + problem.id + "/solve", // The external URL you want to link to
 	};
 	const tagResponse = await fetch("/api/discord/forum", {
 		method: "POST",
@@ -218,7 +224,7 @@ export async function makeProblemThread(problem: ProblemRequest) {
 				components: [
 					{
 						type: 1,
-						components: [linkButton],
+						components: [solveButton, viewButton],
 					},
 				],
 			},
