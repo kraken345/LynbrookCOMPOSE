@@ -147,6 +147,16 @@ export async function getProblems(options: ProblemSelectRequest = {}) {
 export async function makeProblemThread(problem: ProblemRequest) {
 	await loadSettings();
 	const user = await getUser(problem.author_id);
+
+	// Get topics before creating thread
+    const problem_topics = await getProblemTopics(
+        problem.id,
+        "topic_id,global_topics(topic)"
+    );
+    problem.topicArray = problem_topics.map(
+        (x) => x.global_topics?.topic ?? "Unknown Topic"
+    );
+
 	const embed = {
 		title: "Problem " + user.initials + problem.id,
 		//description: "This is the description of the embed.",
@@ -256,15 +266,6 @@ export async function createProblem(payload: ProblemRequest) {
 	const problemId = problem.id
 	// Insert topics first
     await insertProblemTopics(problemId, topics);
-	
-	// Get topics before creating thread
-    const problem_topics = await getProblemTopics(
-        problem.id,
-        "topic_id,global_topics(topic)"
-    );
-    problem.topicArray = problem_topics.map(
-        (x) => x.global_topics?.topic ?? "Unknown Topic"
-    );
 
 	for (const file of problem_files) {
 		await uploadImage(`pb${problemId}/problem/${file.name}`, file);
