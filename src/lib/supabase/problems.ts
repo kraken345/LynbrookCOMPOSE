@@ -147,6 +147,16 @@ export async function getProblems(options: ProblemSelectRequest = {}) {
 export async function makeProblemThread(problem: ProblemRequest) {
 	await loadSettings();
 	const user = await getUser(problem.author_id);
+
+	// Get topics before creating thread
+    const problem_topics = await getProblemTopics(
+        problem.id,
+        "topic_id,global_topics(topic)"
+    );
+    problem.topicArray = problem_topics.map(
+        (x) => x.global_topics?.topic ?? "Unknown Topic"
+    );
+
 	const embed = {
 		title: "Problem " + user.initials + problem.id,
 		//description: "This is the description of the embed.",
@@ -164,17 +174,17 @@ export async function makeProblemThread(problem: ProblemRequest) {
 			},
 			{
 				name: "Answer",
-				value: problem.answer_latex.length > 1023 ? problem.answer_latex.substring(0, 1020) + "..." : problem.answer_latex,
+				value: problem.answer_latex.length > 1019 ? "||" +problem.answer_latex.substring(0, 1016) + "...||" : "||" + problem.answer_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 			{
 				name: "Solution",
-				value: problem.solution_latex.length > 1023 ? problem.solution_latex.substring(0, 1020) + "..." : problem.solution_latex,
+				value: problem.solution_latex.length > 1019 ? "||" +problem.solution_latex.substring(0, 1016) + "...||" : "||" + problem.solution_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 			{
 				name: "Comments",
-				value: problem.comment_latex.length > 1023 ? problem.comment_latex.substring(0, 1020) + "..." : problem.comment_latex,
+				value: problem.comment_latex.length > 1019 ? "||" +problem.comment_latex.substring(0, 1016) + "...||" : "||" + problem.comment_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 		],
@@ -256,15 +266,6 @@ export async function createProblem(payload: ProblemRequest) {
 	const problemId = problem.id
 	// Insert topics first
     await insertProblemTopics(problemId, topics);
-	
-	// Get topics before creating thread
-    const problem_topics = await getProblemTopics(
-        problem.id,
-        "topic_id,global_topics(topic)"
-    );
-    problem.topicArray = problem_topics.map(
-        (x) => x.global_topics?.topic ?? "Unknown Topic"
-    );
 
 	for (const file of problem_files) {
 		await uploadImage(`pb${problemId}/problem/${file.name}`, file);
