@@ -1,6 +1,6 @@
 import { supabase } from "../supabaseClient";
 import { getAuthorName } from "./users";
-import { getUser, fetchSettings } from "$lib/supabase";
+import { getUser, fetchSettings, uploadImage } from "$lib/supabase";
 
 let scheme = {};
 
@@ -241,7 +241,8 @@ export async function makeProblemThread(problem: ProblemRequest) {
  * @param problem object
  * @returns problem data in database (including id)
  */
-export async function createProblem(problem: ProblemRequest, topics: string[]) {
+export async function createProblem(payload: ProblemRequest) {
+	let { topics, problem_files, ...problem } = payload;
 	console.log(problem);
 	let { data, error } = await supabase
 		.from("problems")
@@ -252,9 +253,9 @@ export async function createProblem(problem: ProblemRequest, topics: string[]) {
 		throw error;
 	}
 	problem = data[0];
-
+	const problemId = problem.id
 	// Insert topics first
-    await insertProblemTopics(problem.id, topics);
+    await insertProblemTopics(problemId, topics);
 	
 	// Get topics before creating thread
     const problem_topics = await getProblemTopics(
@@ -264,6 +265,10 @@ export async function createProblem(problem: ProblemRequest, topics: string[]) {
     problem.topicArray = problem_topics.map(
         (x) => x.global_topics?.topic ?? "Unknown Topic"
     );
+
+	for (const file of problem_files) {
+		await uploadImage(`pb${problemId}/problem/${file.name}`, file);
+	}
 	
 	console.log("PROBLEM", problem);
 	console.log("DATA", data);

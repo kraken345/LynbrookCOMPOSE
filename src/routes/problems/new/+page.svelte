@@ -36,16 +36,7 @@
 			if (payload.topics.length == 0) {
 				throw new Error("Must specify at least one topic for this problem");
 			} else {
-				const { topics, problem_files, ...payloadNoTopics } = payload;
-				console.log(payloadNoTopics);
-				const data = await createProblem(payloadNoTopics, topics);
-
-				let problemId = data.id;
-				await insertProblemTopics(problemId, payload.topics);
-
-				for (const file of problem_files) {
-					await uploadImage(`pb${problemId}/problem/${file.name}`, file);
-				}
+				const data = await createProblem(payload);
 
 				let imageDownloadResult = await ImageBucket.downloadLatexImages(
 					payload.problem_latex
@@ -67,7 +58,7 @@
 				}
 
 				openModal = true;
-				problem_id = problemId;
+				problem_id = data.id;
 				//window.location.replace(`/problems/${problemId}`);
 			}
 			dirty = false;
