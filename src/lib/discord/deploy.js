@@ -12,6 +12,6 @@ const isDevelopment = process.env.NODE_ENV === 'development';
     } catch (error) {
         console.error('Error during Discord command deployment:', error);
         // Exit with error code if something went wrong
-        process.exit(1);
+        process.exit(1); 
     }
 })();
