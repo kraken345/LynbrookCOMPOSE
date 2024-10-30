@@ -41,36 +41,59 @@ class JsonResponse extends Response {
 }
 
 export async function GET({ request }) {
-	return new Response("👋");
+    try {
+        return new Response("👋", {
+            headers: {
+                'Content-Type': 'text/plain'
+            }
+        });
+    } catch (error) {
+        return new Response(error.message, { status: 500 });
+    }
 }
+
 export async function POST({ request }) {
-	await loadSettings();
-	// Verify the authenticity of the request using Discord's public key and signature
-	let text = await request.text();
-	const isValidRequest = await verifyRequest(request, text);
-	text = JSON.parse(text);
+    try {
+        await loadSettings();
+        let text = await request.text();
+        const isValidRequest = await verifyRequest(request, text);
+        text = JSON.parse(text);
 
-	if (!isValidRequest) {
-		return new Response({}, { status: 401, statusText: "Unauthorized" });
-	}
+        if (!isValidRequest) {
+            return new Response("Invalid request signature", { 
+                status: 401, 
+                statusText: "Unauthorized",
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            });
+        }
 
-	// Handle different interaction types
-	switch (text.type) {
-		case InteractionType.APPLICATION_COMMAND:
-			return handleCommand(text);
-			
-		case InteractionType.MESSAGE_COMPONENT:
-			return handleComponent(text);
-			
-		case InteractionType.MODAL_SUBMIT:
-			return handleModalSubmit(text);
-	}
-
-	return new Response(
-		JSON.stringify({
-			type: InteractionResponseType.PONG
-		})
-	);
+        // Handle different interaction types
+        switch (text.type) {
+            case InteractionType.APPLICATION_COMMAND:
+                return handleCommand(text);
+                
+            case InteractionType.MESSAGE_COMPONENT:
+                return handleComponent(text);
+                
+            case InteractionType.MODAL_SUBMIT:
+                return handleModalSubmit(text);
+            
+            default:
+                return new JsonResponse({
+                    type: InteractionResponseType.PONG
+                });
+        }
+    } catch (error) {
+        console.error('Error processing request:', error);
+        return new Response(error.message, { 
+            status: 500,
+            headers: {
+                'Content-Type': 'text/plain'
+            }
+        });
+    }
 }
 
 async function handleCommand(interaction) {
