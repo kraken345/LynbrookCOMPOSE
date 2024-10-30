@@ -3,7 +3,7 @@ import {fetchSettings} from "$lib/supabase";
 import {
 	InteractionResponseType,
 	InteractionType,
-	InteractionResponseFlags,
+	MessageComponentTypes,
 } from "discord-interactions";
 const discordToken = import.meta.env.VITE_BOT_TOKEN;
 
@@ -53,116 +53,95 @@ export async function POST({ request }) {
 	if (!isValidRequest) {
 		return new Response({}, { status: 401, statusText: "Unauthorized" });
 	}
-	// Check the type of interaction (1 for button click)
-	if (text.type === InteractionType.PING) {
-		// The `PING` message is used during the initial webhook handshake, and is
-		// required to configure the webhook in the developer portal.
-		return new JsonResponse({
-			type: InteractionResponseType.PONG,
-		});
-	} else if (text.type === 3) {
-		if (text.data.custom_id === "create-thread") {
-			console.log("Thread Button");
-			const author_id = text.channel.recipients[0].id;
-			const solver_id = text.message.embeds[0].footer.text;
-			console.log(text);
-			const embed = text.message.embeds[0];
-			const problem_id = embed.title.replace(
-				"Feedback received on problem ",
-				""
-			);
 
-			const response = await fetch(
-				`https://discord.com/api/v10/channels/${scheme.discord.thread_channel}/messages`,
-				{
-					method: "POST",
-					headers: {
-						Authorization: `Bot ${discordToken}`,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						content: "",
-						embeds: [embed],
-						components: [
-							{
-								type: 1,
-								components: [text.message.components[0].components[0]],
-							},
-						],
-					}),
-				}
-			);
-			const message_id = (await response.json()).id;
-			const response2 = await fetch(
-				`https://discord.com/api/v10/channels/${scheme.discord.thread_channel}/messages/${message_id}/threads`,
-				{
-					method: "POST",
-					headers: {
-						Authorization: `Bot ${discordToken}`,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						name: problem_id,
-					}),
-				}
-			);
-			const thread_id = (await response2.json()).id;
-			const response3 = await fetch(
-				`https://discord.com/api/v10/channels/${thread_id}/messages`,
-				{
-					method: "POST",
-					headers: {
-						Authorization: `Bot ${discordToken}`,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						content:
-							"<@" +
-							author_id +
-							"> <@" +
-							solver_id +
-							"> Thread created to discuss Problem " +
-							problem_id +
-							".",
-					}),
-				}
-			);
+	// Handle different interaction types
+	switch (text.type) {
+		case InteractionType.APPLICATION_COMMAND:
+			return handleCommand(text);
+			
+		case InteractionType.MESSAGE_COMPONENT:
+			return handleComponent(text);
+			
+		case InteractionType.MODAL_SUBMIT:
+			return handleModalSubmit(text);
+	}
 
-			const response4 = await fetch(
-				`https://discord.com/api/v10/channels/${text.channel_id}/messages/${text.message.id}`,
-				{
-					method: "PATCH",
-					headers: {
-						Authorization: `Bot ${discordToken}`,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						content: "",
-						embeds: [embed],
-						components: [
-							{
-								type: 1,
-								components: [text.message.components[0].components[0]],
-							},
-						],
-					}),
-				}
-			);
+	return new Response(
+		JSON.stringify({
+			type: InteractionResponseType.PONG
+		})
+	);
+}
 
+async function handleCommand(interaction) {
+	const { data: { name, options } } = interaction;
+
+	switch (name) {
+		case "ping":
 			return new JsonResponse({
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 				data: {
-					content: "<#" + thread_id + "> created.",
-					flags: InteractionResponseFlags.EPHEMERAL,
-				},
+					content: "Pong!",
+					components: [{
+						type: MessageComponentTypes.ACTION_ROW,
+						components: [{
+							type: MessageComponentTypes.BUTTON,
+							style: 1,
+							custom_id: "ping_button",
+							label: "Click me!"
+						}]
+					}]
+				}
 			});
-		}
+
+		case "problem":
+			return new JsonResponse({
+				type: InteractionResponseType.MODAL,
+				data: {
+					custom_id: "problem_modal",
+					title: "Create New Problem",
+					components: [{
+						type: MessageComponentTypes.ACTION_ROW,
+						components: [{
+							type: MessageComponentTypes.TEXT_INPUT,
+							custom_id: "problem_title",
+							label: "Problem Title",
+							style: 1,
+							min_length: 1,
+							max_length: 100,
+							required: true
+						}]
+					}]
+				}
+			});
 	}
-	const resp = new Response(
-		JSON.stringify({
-			type: 1, // Type 1 for acknowledging the interaction
-		}),
-		{ status: 200, statusText: "Interaction Received" }
-	);
-	return resp;
+}
+
+async function handleComponent(interaction) {
+	const { data: { custom_id } } = interaction;
+
+	if (custom_id === "ping_button") {
+		return new JsonResponse({
+			type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+			data: {
+				content: "Button clicked!",
+				flags: 64 // Ephemeral - only visible to the user who clicked
+			}
+		});
+	}
+}
+
+async function handleModalSubmit(interaction) {
+	const { data: { custom_id, components } } = interaction;
+
+	if (custom_id === "problem_modal") {
+		const problemTitle = components[0].components[0].value;
+		return new JsonResponse({
+			type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+			data: {
+				content: `Created problem: ${problemTitle}`,
+				flags: 64
+			}
+		});
+	}
 }

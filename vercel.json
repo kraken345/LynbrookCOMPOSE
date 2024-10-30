@@ -1,0 +1,10 @@
+{
+    "version": 2,
+    
+    "functions": {
+      "api/discord/interactions": {
+        "memory": 1024,
+        "maxDuration": 10
+      }
+    }
+}

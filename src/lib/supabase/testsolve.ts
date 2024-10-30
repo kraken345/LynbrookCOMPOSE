@@ -520,7 +520,6 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 		const data = await response.json();
 		console.log(data);
 		*/
-		console.log("DISCORD_ID", problem);
 		const user = await getUser(problem.author_id);
 		const embed = {
 			title: "Feedback received on problem " + user.initials + problem.id,
