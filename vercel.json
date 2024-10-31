@@ -2,7 +2,7 @@
     "version": 2,
     
     "functions": {
-      "api/discord/interactions/+server": {
+      "api/discord/interactions/+server.js": {
         "memory": 1024,
         "maxDuration": 10
       }
