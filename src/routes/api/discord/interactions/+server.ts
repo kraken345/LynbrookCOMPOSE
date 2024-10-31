@@ -1,3 +1,5 @@
+import type { Config } from '@sveltejs/adapter-vercel';
+
 import nacl from "tweetnacl";
 import {fetchSettings} from "$lib/supabase";
 import {
@@ -5,6 +7,11 @@ import {
 	InteractionType,
 	MessageComponentTypes,
 } from "discord-interactions";
+
+export const config: Config = {
+	runtime: 'nodejs18.x'
+};
+
 const discordToken = import.meta.env.VITE_BOT_TOKEN;
 
 const PUBLIC_KEY = import.meta.env.VITE_BOT_PUBLIC_KEY;

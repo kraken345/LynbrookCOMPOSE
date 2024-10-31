@@ -28,6 +28,7 @@
 		"@react2svelte/swipeable": "^0.1.4",
 		"@supabase/auth-helpers-sveltekit": "^0.10.3",
 		"@supabase/supabase-js": "^2.38.0",
+		"@sveltejs/adapter-vercel": "^3.1.0",
 		"@unified-latex/unified-latex": "^1.2.2",
 		"@unified-latex/unified-latex-to-hast": "^1.2.2",
 		"ai": "^2.2.16",
