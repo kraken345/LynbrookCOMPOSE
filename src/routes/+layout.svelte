@@ -10,10 +10,10 @@
 	import { page } from "$app/stores";
 	import { Toaster } from "svelte-french-toast";
 	import { getThisUser } from "$lib/supabase";
-	import { fetchSettings } from "$lib/supabase/settings"; // Import fetchSettings
+	import { defaultSettings, fetchSettings } from "$lib/supabase/settings"; // Import fetchSettings
 	let loaded = false;
 	let hasAccount = true;
-	let scheme = {}; // Initialize scheme variable
+	let scheme = defaultSettings; // Initialize scheme variable
 
 	(async () => {
 		user.set(await getThisUser());

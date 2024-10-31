@@ -1,12 +1,17 @@
 import { supabase } from "../supabaseClient";
 import { getAuthorName } from "./users";
-import { getUser, fetchSettings, uploadImage } from "$lib/supabase";
+import {
+	getUser,
+	fetchSettings,
+	uploadImage,
+	defaultSettings,
+} from "$lib/supabase";
 
-let scheme = {};
+let scheme = defaultSettings;
 
 // Function to fetch settings
 async function loadSettings() {
-    scheme = await fetchSettings(); // Fetch settings from the database
+	scheme = await fetchSettings(); // Fetch settings from the database
 }
 
 export interface ProblemRequest {
@@ -89,7 +94,7 @@ export async function getProblems(options: ProblemSelectRequest = {}) {
 	let {
 		customSelect = "*",
 		customOrder = null,
-		customEq = {"archived": false},
+		customEq = { archived: false },
 		normal = true,
 		archived = false,
 		after = null,
@@ -149,13 +154,13 @@ export async function makeProblemThread(problem: ProblemRequest) {
 	const user = await getUser(problem.author_id);
 
 	// Get topics before creating thread
-    const problem_topics = await getProblemTopics(
-        problem.id,
-        "topic_id,global_topics(topic)"
-    );
-    problem.topicArray = problem_topics.map(
-        (x) => x.global_topics?.topic ?? "Unknown Topic"
-    );
+	const problem_topics = await getProblemTopics(
+		problem.id,
+		"topic_id,global_topics(topic)",
+	);
+	problem.topicArray = problem_topics.map(
+		(x) => x.global_topics?.topic ?? "Unknown Topic",
+	);
 
 	const embed = {
 		title: "Problem " + user.initials + problem.id,
@@ -169,22 +174,34 @@ export async function makeProblemThread(problem: ProblemRequest) {
 		fields: [
 			{
 				name: "Problem",
-				value: problem.problem_latex.length > 1023 ? problem.problem_latex.substring(0, 1020) + "..." : problem.problem_latex,
+				value:
+					problem.problem_latex.length > 1023
+						? problem.problem_latex.substring(0, 1020) + "..."
+						: problem.problem_latex,
 				inline: false, // You can set whether the field is inline
 			},
 			{
 				name: "Answer",
-				value: problem.answer_latex.length > 1019 ? "||" +problem.answer_latex.substring(0, 1016) + "...||" : "||" + problem.answer_latex + "||",
+				value:
+					problem.answer_latex.length > 1019
+						? "||" + problem.answer_latex.substring(0, 1016) + "...||"
+						: "||" + problem.answer_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 			{
 				name: "Solution",
-				value: problem.solution_latex.length > 1019 ? "||" +problem.solution_latex.substring(0, 1016) + "...||" : "||" + problem.solution_latex + "||",
+				value:
+					problem.solution_latex.length > 1019
+						? "||" + problem.solution_latex.substring(0, 1016) + "...||"
+						: "||" + problem.solution_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 			{
 				name: "Comments",
-				value: problem.comment_latex.length > 1019 ? "||" +problem.comment_latex.substring(0, 1016) + "...||" : "||" + problem.comment_latex + "||",
+				value:
+					problem.comment_latex.length > 1019
+						? "||" + problem.comment_latex.substring(0, 1016) + "...||"
+						: "||" + problem.comment_latex + "||",
 				inline: false, // You can set whether the field is inline
 			},
 		],
@@ -213,9 +230,9 @@ export async function makeProblemThread(problem: ProblemRequest) {
 		method: "POST",
 		body: JSON.stringify({
 			channelId: scheme.discord.notifs_forum,
-			tags: problem.topicArray
+			tags: problem.topicArray,
 		}),
-	})
+	});
 	const { tagIds } = await tagResponse.json();
 	console.log("MAKING FETCH");
 	const threadResponse = await fetch("/api/discord/thread", {
@@ -243,7 +260,7 @@ export async function makeProblemThread(problem: ProblemRequest) {
 	if (threadData.id) {
 		await editProblem({ discord_id: threadData.id }, problem.id);
 		problem.discord_id = threadData.id;
-		success = true
+		success = true;
 	}
 	console.log("AUTHORID", problem.author_id);
 	/**
@@ -273,14 +290,14 @@ export async function createProblem(payload: ProblemRequest) {
 		throw error;
 	}
 	problem = data[0];
-	const problemId = problem.id
+	const problemId = problem.id;
 	// Insert topics first
-    await insertProblemTopics(problemId, topics);
+	await insertProblemTopics(problemId, topics);
 
 	for (const file of problem_files) {
 		await uploadImage(`pb${problemId}/problem/${file.name}`, file);
 	}
-	
+
 	console.log("PROBLEM", problem);
 	console.log("DATA", data);
 	await makeProblemThread(problem);
@@ -312,7 +329,7 @@ export async function bulkProblems(problems: ProblemRequest[]) {
  */
 export async function editProblem(
 	problem: ProblemEditRequest,
-	problem_id: number
+	problem_id: number,
 ) {
 	const { data, error } = await supabase
 		.from("problems")
@@ -341,15 +358,17 @@ export async function editProblem(
  *
  * @param problem_id number
  */
-export async function archiveProblem(problem_id: number, isPublished: boolean = false) {
-	if (isPublished){
+export async function archiveProblem(
+	problem_id: number,
+	isPublished: boolean = false,
+) {
+	if (isPublished) {
 		const { error } = await supabase
-		.from("problems")
-		.update({ archived: true, status: "Published" })
-		.eq("id", problem_id);
+			.from("problems")
+			.update({ archived: true, status: "Published" })
+			.eq("id", problem_id);
 		if (error) throw error;
-	}
-	else {
+	} else {
 		const { error } = await supabase
 			.from("problems")
 			.update({ archived: true })
@@ -392,7 +411,7 @@ export async function restoreProblem(problem_id: number) {
  */
 export async function getProblemTopics(
 	problem_id: number,
-	customSelect: string = "*"
+	customSelect: string = "*",
 ) {
 	let { data: problem_topics, error } = await supabase
 		.from("problem_topics")
@@ -425,13 +444,13 @@ export async function deleteProblemTopics(problem_id: number) {
  */
 export async function insertProblemTopics(
 	problem_id: number,
-	topics: string[]
+	topics: string[],
 ) {
 	let { error } = await supabase.from("problem_topics").insert(
 		topics.map((tp) => ({
 			problem_id: problem_id,
 			topic_id: tp,
-		}))
+		})),
 	);
 	if (error) throw error;
 }
