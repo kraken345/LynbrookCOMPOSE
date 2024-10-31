@@ -5,12 +5,12 @@
  */
 
 const config = {
-	GUILD_ID: process.env.VITE_GUILD_ID,
-	DISCORD_TOKEN: process.env.VITE_BOT_TOKEN,
+	GUILD_ID: process.env.GUILD_ID,
+	DISCORD_TOKEN: process.env.BOT_TOKEN,
 	DISCORD_CLIENT_ID: process.env.VITE_CLIENT_ID,
-	DISCORD_CLIENT_SECRET: process.env.VITE_CLIENT_SECRET,
-	DISCORD_REDIRECT_URI: process.env.VITE_REDIRECT_URI,
-	COOKIE_SECRET: process.env.VITE_COOKIE_SECRET,
+	DISCORD_CLIENT_SECRET: process.env.CLIENT_SECRET,
+	DISCORD_REDIRECT_URI: process.env.VITE_BASE_URL + "/api/discord-oauth-callback",
+	COOKIE_SECRET: process.env.COOKIE_SECRET,
 };
 
 export default config;

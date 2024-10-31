@@ -3,6 +3,7 @@ import { getProblem } from "$lib/supabase/problems";
 import { getUser, fetchSettings } from "$lib/supabase";
 import { formatDate } from "$lib/formatDate";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000'; // Set your base URL here
 let scheme = {};
 
 // Function to fetch settings
@@ -504,8 +505,6 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 		// TODO: Set const `thread` that gets the discord threadID from problem_feedback
 		const discord_id = solver.discord_id;
 		const solver_name = solver.full_name;
-		const discordToken = import.meta.env.VITE_BOT_TOKEN;
-		console.log(discordToken);
 		// The following is an attempt to fetch the user to display their icon in the embed. I kept getting a 401 Unauthorized Error and gave up
 		/** 
 		const response = await fetch(`https://discord.com/api/v10/users/@me`, {
@@ -564,7 +563,7 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 			url: scheme.url + "/problems/" + problem.id, // The external URL you want to link to
 		};
 		if (problem.discord_id) {
-			const response = await fetch("/api/discord/feedback", {
+			const response = await fetch(`api/discord/feedback`, {
 				method: "POST",
 				body: JSON.stringify({
 					userId: problem.author_id,
@@ -688,9 +687,9 @@ export async function getRandomProblems(activeUserId, endorsing = false) {
  *
  * @param problem_feedback any[]
  */
-export async function addProblemFeedback(problem_feedback: any[]) {
+export async function addProblemFeedback(problem_feedback: any[], supabaseClient = supabase) {
 	console.log("adding", problem_feedback);
-	const { error: error } = await supabase
+	const { error: error } = await supabaseClient
 		.from("problem_feedback")
 		.insert(problem_feedback);
 	if (error) throw error;

@@ -1,16 +1,18 @@
-import nacl from "tweetnacl";
+import nacl from "tweetnacl"
 import {fetchSettings, addProblemFeedback} from "$lib/supabase";
+import { supabase } from "$lib/supabaseAPIClient";
 import {
 	InteractionResponseType,
 	InteractionType,
 	MessageComponentTypes,
 } from "discord-interactions";
+import dotenv from 'dotenv';
+dotenv.config()
 
 
-const discordToken = import.meta.env.VITE_BOT_TOKEN;
+const discordToken = process.env.BOT_TOKEN;
 
-const PUBLIC_KEY = import.meta.env.VITE_BOT_PUBLIC_KEY;
-
+const PUBLIC_KEY = process.env.VITE_BOT_PUBLIC_KEY;
 let scheme = {};
 
 // Function to fetch settings
@@ -19,8 +21,9 @@ async function loadSettings() {
 }
 //Change
 async function verifyRequest(req, body) {
-	const signature = req.headers.get("X-Signature-Ed25519");
-	const timestamp = req.headers.get("X-Signature-Timestamp");
+	const signature = req.headers.get("x-signature-ed25519");
+	const timestamp = req.headers.get("x-signature-timestamp");
+	console.log(signature, timestamp)
 	const isVerified = nacl.sign.detached.verify(
 		Buffer.from(timestamp + body),
 		Buffer.from(signature, "hex"),
@@ -57,9 +60,11 @@ export async function GET({ request }) {
 export async function POST({ request }) {
     try {
         await loadSettings();
-        let text = await request.text();
-        const isValidRequest = await verifyRequest(request, text);
-        text = JSON.parse(text);
+		console.log("DISCORD INTERACTIONS")
+		const body = await request.text()
+        const isValidRequest = await verifyRequest(request, body);
+		
+        let text = JSON.parse(body);
 
         if (!isValidRequest) {
             return new Response("Invalid request signature", { 
@@ -74,6 +79,7 @@ export async function POST({ request }) {
         // Handle different interaction types
         switch (text.type) {
             case InteractionType.PING:
+				console.log("PING!")
                 return new JsonResponse({
                     type: InteractionResponseType.PONG
                 });
@@ -170,14 +176,26 @@ async function handleCommand(interaction) {
 async function handleFeedback(interaction) {
 	const channelId = interaction.channel_id;
 	const options = interaction.data.options;
-	
 	// 1. Get the problem from the channel ID
+	console.log("channelId", channelId)
+	await supabase.auth.setSession({
+        access_token: 'custom_discord_bot_token',
+        refresh_token: '',
+        user: {
+            id: 'discord_bot',
+            role: 'discord_bot'
+        }
+    });
+	await supabase.rpc('set_config', {
+        parameter: 'app.discord_channel_id',
+        value: channelId
+    });
 	const { data: problem } = await supabase
 		.from('problems')
 		.select('*')
-		.eq('discord_id', channelId)
+		.eq("discord_id", channelId)
 		.single();
-
+	console.log("PROBLEM", problem)
 	if (!problem) {
 		return {
 			content: 'No problem detected - make sure to use the command in the problem specific thread!',
@@ -206,7 +224,7 @@ async function handleFeedback(interaction) {
 	// 4. Prepare feedback data
 	const feedbackData = {
 		problem_id: problem.id,
-		user_id: user.id,
+		solver_id: user.id,
 		feedback: options.find(opt => opt.name === 'feedback')?.value,
 		answer: options.find(opt => opt.name === 'answer')?.value,
 		correct: options.find(opt => opt.name === 'correct')?.value,
@@ -215,7 +233,7 @@ async function handleFeedback(interaction) {
 	};
 
 	// 5. Add feedback to database
-	await addProblemFeedback(feedbackData);
+	await addProblemFeedback([feedbackData], supabase);
 
 	return {
 		content: 'Feedback submitted successfully!',
