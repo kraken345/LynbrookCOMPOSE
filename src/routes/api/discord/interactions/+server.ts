@@ -118,6 +118,7 @@ async function handleCommand(interaction) {
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 				data: {
 					content: "Pong!",
+					flags: 64,
 					components: [{
 						type: MessageComponentTypes.ACTION_ROW,
 						components: [{
