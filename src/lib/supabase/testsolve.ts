@@ -563,8 +563,13 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 			url: scheme.url + "/problems/" + problem.id, // The external URL you want to link to
 		};
 		if (problem.discord_id) {
-			const response = await fetch(`api/discord/feedback`, {
+			console.log("MAKING FETCH")
+			const response = await fetch(`${scheme.url}/api/discord/feedback`, {
 				method: "POST",
+				headers: {
+					"Content-Type": "application/json", // Ensure the content type is set
+					"Accept": "application/json", // Accept JSON response
+				},
 				body: JSON.stringify({
 					userId: problem.author_id,
 					threadID: problem.discord_id,
@@ -595,8 +600,12 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 				url: messageUrl,
 				label: "View Thread",
 			};
-			await fetch("/api/discord/dm", {
+			await fetch(`${scheme.url}/api/discord/dm`, {
 				method: "POST",
+				headers: {
+					"Content-Type": "application/json", // Ensure the content type is set
+					"Accept": "application/json", // Accept JSON response
+				},
 				body: JSON.stringify({
 					userId: problem.author_id,
 					message: {
@@ -612,8 +621,12 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 				}),
 			});
 		} else {
-			await fetch("/api/discord/dm", {
+			await fetch(`${scheme.url}/api/discord/dm`, {
 				method: "POST",
+				headers: {
+					"Content-Type": "application/json", // Ensure the content type is set
+					"Accept": "application/json", // Accept JSON response
+				},
 				body: JSON.stringify({
 					userId: problem.author_id,
 					message: {

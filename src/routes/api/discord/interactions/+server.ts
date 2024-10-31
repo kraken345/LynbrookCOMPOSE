@@ -205,6 +205,7 @@ async function handleFeedback(interaction) {
 
 	// 2. Determine feedback author
 	const authorOption = options.find(opt => opt.name === 'author');
+	console.log("AUTHOR", authorOption)
 	const feedbackGiverId = authorOption ? authorOption.value : interaction.member.user.id;
 
 	// 3. Verify user exists in database
@@ -226,11 +227,13 @@ async function handleFeedback(interaction) {
 		problem_id: problem.id,
 		solver_id: user.id,
 		feedback: options.find(opt => opt.name === 'feedback')?.value,
-		answer: options.find(opt => opt.name === 'answer')?.value,
-		correct: options.find(opt => opt.name === 'correct')?.value,
-		difficulty: options.find(opt => opt.name === 'difficulty')?.value,
-		quality: options.find(opt => opt.name === 'quality')?.value
+		answer: options.find(opt => opt.name === 'answer')?.value ?? null,
+		correct: options.find(opt => opt.name === 'correct')?.value ?? null,
+		difficulty: options.find(opt => opt.name === 'difficulty')?.value ?? null,
+		quality: options.find(opt => opt.name === 'quality')?.value ?? null
 	};
+
+	console.log("FEEDBACKDATA", feedbackData)
 
 	// 5. Add feedback to database
 	await addProblemFeedback([feedbackData], supabase);
