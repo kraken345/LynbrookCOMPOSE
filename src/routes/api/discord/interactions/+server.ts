@@ -56,7 +56,7 @@ export async function GET({ request }) {
 
 export async function POST({ request }) {
     try {
-		console.log("HANDLING INTERACTION", request.text())
+		console.log("HANDLING INTERACTION")
         await loadSettings();
         let text = await request.text();
         const isValidRequest = await verifyRequest(request, text);
