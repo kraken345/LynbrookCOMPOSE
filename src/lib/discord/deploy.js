@@ -1,11 +1,9 @@
 import { registerCommands } from './register-commands.js';
 import { registerMetadata } from './register-metadata.js';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 (async () => {
     try {
-        await registerCommands(isDevelopment);
+        await registerCommands();
         await registerMetadata();
         // Exit successfully after completion
         process.exit(0);

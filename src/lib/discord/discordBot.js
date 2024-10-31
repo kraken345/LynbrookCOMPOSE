@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config()
 
-const token = process.env.VITE_BOT_TOKEN;
+const token = process.env.BOT_TOKEN;
 export const rest = new REST({ version: "10" }).setToken(token);
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -26,6 +26,6 @@ client.on(Events.InteractionCreate, async interaction => {
     // }
 });
 
-client.login(process.env.VITE_BOT_TOKEN);
+client.login(process.env.BOT_TOKEN);
 
 export default client;

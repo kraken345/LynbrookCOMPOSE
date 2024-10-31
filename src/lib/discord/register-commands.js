@@ -1,6 +1,6 @@
 import { rest } from "./discordBot.js";
 import config from "./config.js";
-
+console.log("CONFIG", config)
 const commands = [
     {
         name: "ping",
@@ -51,9 +51,7 @@ const commands = [
 
 export async function registerCommands(isDevelopment = false) {
     try {
-        const route = isDevelopment
-            ? `/applications/${config.DISCORD_CLIENT_ID}/guilds/${config.GUILD_ID}/commands`
-            : `/applications/${config.DISCORD_CLIENT_ID}/commands`;
+        const route = `/applications/${config.DISCORD_CLIENT_ID}/guilds/${config.GUILD_ID}/commands`
             
         await rest.put(route, { body: commands });
         console.log("Successfully registered application commands.");
