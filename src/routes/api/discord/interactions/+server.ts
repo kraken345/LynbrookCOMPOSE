@@ -44,7 +44,7 @@ class JsonResponse extends Response {
 
 export async function GET({ request }) {
     try {
-        return new Response("👋", {
+        return new Response("Here!", {
             headers: {
                 'Content-Type': 'text/plain'
             }
@@ -119,24 +119,11 @@ async function handleCommand(interaction) {
 				}
 			});
 
-		case "problem":
+		case "feedback":
 			return new JsonResponse({
-				type: InteractionResponseType.MODAL,
+				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 				data: {
-					custom_id: "problem_modal",
-					title: "Create New Problem",
-					components: [{
-						type: MessageComponentTypes.ACTION_ROW,
-						components: [{
-							type: MessageComponentTypes.TEXT_INPUT,
-							custom_id: "problem_title",
-							label: "Problem Title",
-							style: 1,
-							min_length: 1,
-							max_length: 100,
-							required: true
-						}]
-					}]
+					content: JSON.stringify(options),
 				}
 			});
 	}

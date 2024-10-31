@@ -7,25 +7,43 @@ const commands = [
         description: "Checks if bot is online - should respond pong",
     },
     {
-        name: "problem",
-        description: "Create a new problem",
+        name: "feedback",
+        description: "Provide feedback on the current problem",
         options: [
             {
-                name: "title",
-                description: "The title of the problem",
+                name: "feedback",
+                description: "Your feedback for the problem",
                 type: 3,
                 required: true
             },
             {
+                name: "answer",
+                description: "Your answer if you solved the problem",
+                type: 3,
+            },
+            {
+                name: "correct",
+                description: "Was your answer correct?",
+                type: 5,
+            },
+            {
                 name: "difficulty",
-                description: "Problem difficulty",
+                description: "Difficulty Rating (/10)",
                 type: 4,
-                required: true,
-                choices: [
-                    { name: "Easy", value: 1 },
-                    { name: "Medium", value: 2 },
-                    { name: "Hard", value: 3 }
-                ]
+                min_value: 1,
+                max_value: 10,
+            },
+            {
+                name: "quality",
+                description: "Quality Rating (/10)",
+                type: 4,
+                min_value: 1,
+                max_value: 10,
+            },
+            {
+                name: "author",
+                description: "Who gave the feedback (if not yourself)",
+                type: 6,
             }
         ]
     }
