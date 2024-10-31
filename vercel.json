@@ -2,7 +2,7 @@
     "version": 2,
     
     "functions": {
-      ".svelte-kit/vercel/api/discord/interactions": {
+      "api/discord/interactions/+server": {
         "memory": 1024,
         "maxDuration": 10
       }
