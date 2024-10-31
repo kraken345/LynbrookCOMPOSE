@@ -5,7 +5,7 @@ export const defaultSettings = {
 	title: "",
 };
 
-let cachedSettings = {};
+let cachedSettings = null;
 export async function fetchSettings() {
 	if (cachedSettings) {
 		return cachedSettings; // Return cached settings if already fetched
