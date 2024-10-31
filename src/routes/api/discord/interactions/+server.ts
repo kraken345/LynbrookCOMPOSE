@@ -73,6 +73,11 @@ export async function POST({ request }) {
 
         // Handle different interaction types
         switch (text.type) {
+            case InteractionType.PING:
+                return new JsonResponse({
+                    type: InteractionResponseType.PONG
+                });
+                
             case InteractionType.APPLICATION_COMMAND:
                 return handleCommand(text);
                 
