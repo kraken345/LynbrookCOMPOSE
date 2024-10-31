@@ -1,5 +1,5 @@
 import nacl from "tweetnacl";
-import {fetchSettings} from "$lib/supabase";
+import {fetchSettings, addProblemFeedback} from "$lib/supabase";
 import {
 	InteractionResponseType,
 	InteractionType,
@@ -120,13 +120,102 @@ async function handleCommand(interaction) {
 			});
 
 		case "feedback":
-			return new JsonResponse({
-				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-				data: {
-					content: JSON.stringify(options),
-				}
-			});
+			if (interaction.type === InteractionType.APPLICATION_COMMAND) {
+				// First, defer the response
+				const deferResponse = new JsonResponse({
+					type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+					data: {
+						flags: 64 // Ephemeral
+					}
+				});
+
+				// Send the defer response
+				await fetch(`https://discord.com/api/v10/interactions/${interaction.id}/${interaction.token}/callback`, {
+					method: 'POST',
+					body: JSON.stringify({
+						type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+						data: {
+							flags: 64 // Ephemeral
+						}
+					}),
+					headers: {
+						'Content-Type': 'application/json',
+					}
+				});
+
+				// Process the feedback
+				const result = await handleFeedback(interaction);
+
+				// Send the follow-up message
+				await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
+					method: 'PATCH',
+					body: JSON.stringify(result),
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bot ${discordToken}`
+					}
+				});
+
+				return deferResponse;
+			}
+			break;
 	}
+}
+
+async function handleFeedback(interaction) {
+	const channelId = interaction.channel_id;
+	const options = interaction.data.options;
+	
+	// 1. Get the problem from the channel ID
+	const { data: problem } = await supabase
+		.from('problems')
+		.select('*')
+		.eq('discord_id', channelId)
+		.single();
+
+	if (!problem) {
+		return {
+			content: 'No problem detected - make sure to use the command in the problem specific thread!',
+			flags: 64
+		};
+	}
+
+	// 2. Determine feedback author
+	const authorOption = options.find(opt => opt.name === 'author');
+	const feedbackGiverId = authorOption ? authorOption.value : interaction.member.user.id;
+
+	// 3. Verify user exists in database
+	const { data: user } = await supabase
+		.from('users')
+		.select('*')
+		.eq('discord_id', feedbackGiverId)
+		.single();
+
+	if (!user) {
+		return {
+			content: 'The author does not have permissions. Make sure they have a COMPOSE account, and have connected their discord!',
+			flags: 64
+		};
+	}
+
+	// 4. Prepare feedback data
+	const feedbackData = {
+		problem_id: problem.id,
+		user_id: user.id,
+		feedback: options.find(opt => opt.name === 'feedback')?.value,
+		answer: options.find(opt => opt.name === 'answer')?.value,
+		correct: options.find(opt => opt.name === 'correct')?.value,
+		difficulty: options.find(opt => opt.name === 'difficulty')?.value,
+		quality: options.find(opt => opt.name === 'quality')?.value
+	};
+
+	// 5. Add feedback to database
+	await addProblemFeedback(feedbackData);
+
+	return {
+		content: 'Feedback submitted successfully!',
+		flags: 64
+	};
 }
 
 async function handleComponent(interaction) {
