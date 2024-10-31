@@ -1,6 +1,6 @@
 import { rest } from "./discordBot.js";
 import config from "./config.js";
-
+console.log("CONFIG", config)
 const commands = [
     {
         name: "ping",
