@@ -5,11 +5,12 @@
  */
 
 const config = {
-	DISCORD_TOKEN: import.meta.env.VITE_BOT_TOKEN,
-	DISCORD_CLIENT_ID: import.meta.env.VITE_CLIENT_ID,
-	DISCORD_CLIENT_SECRET: import.meta.env.VITE_CLIENT_SECRET,
-	DISCORD_REDIRECT_URI: import.meta.env.VITE_REDIRECT_URI,
-	COOKIE_SECRET: import.meta.env.VITE_COOKIE_SECRET,
+	GUILD_ID: process.env.VITE_GUILD_ID,
+	DISCORD_TOKEN: process.env.VITE_BOT_TOKEN,
+	DISCORD_CLIENT_ID: process.env.VITE_CLIENT_ID,
+	DISCORD_CLIENT_SECRET: process.env.VITE_CLIENT_SECRET,
+	DISCORD_REDIRECT_URI: process.env.VITE_REDIRECT_URI,
+	COOKIE_SECRET: process.env.VITE_COOKIE_SECRET,
 };
 
 export default config;
