@@ -1,5 +1,10 @@
 import { supabase } from "$lib/supabaseClient"; // Your Supabase client initialization
 
+export const defaultSettings = {
+	logo: "/logo.png",
+	title: "",
+};
+
 let cachedSettings = null;
 export async function fetchSettings() {
 	if (cachedSettings) {
@@ -15,6 +20,6 @@ export async function fetchSettings() {
 		return {};
 	}
 
-	cachedSettings = data?.settings || {}; // Cache the settings
+	cachedSettings = data?.settings || defaultSettings; // Cache the settings
 	return cachedSettings;
 }

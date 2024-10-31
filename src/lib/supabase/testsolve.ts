@@ -1,14 +1,14 @@
 import { supabase } from "../supabaseClient";
 import { getProblem } from "$lib/supabase/problems";
-import { getUser, fetchSettings } from "$lib/supabase";
+import { getUser, fetchSettings, defaultSettings } from "$lib/supabase";
 import { formatDate } from "$lib/formatDate";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000'; // Set your base URL here
-let scheme = {};
+let scheme = defaultSettings;
 
 // Function to fetch settings
 async function loadSettings() {
-    scheme = await fetchSettings(); // Fetch settings from the database
+	scheme = await fetchSettings(); // Fetch settings from the database
 }
 
 export interface TestsolverRequest {
