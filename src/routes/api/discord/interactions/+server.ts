@@ -1,5 +1,3 @@
-import type { Config } from '@sveltejs/adapter-vercel';
-
 import nacl from "tweetnacl";
 import {fetchSettings} from "$lib/supabase";
 import {
@@ -8,9 +6,6 @@ import {
 	MessageComponentTypes,
 } from "discord-interactions";
 
-export const config: Config = {
-	runtime: 'nodejs18.x'
-};
 
 const discordToken = import.meta.env.VITE_BOT_TOKEN;
 
@@ -61,6 +56,7 @@ export async function GET({ request }) {
 
 export async function POST({ request }) {
     try {
+		console.log("HANDLING INTERACTION", request.text())
         await loadSettings();
         let text = await request.text();
         const isValidRequest = await verifyRequest(request, text);
@@ -108,6 +104,7 @@ async function handleCommand(interaction) {
 
 	switch (name) {
 		case "ping":
+			console.log("PING!")
 			return new JsonResponse({
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 				data: {
