@@ -57,7 +57,7 @@
 		<div class="loadingPage flex">
 			<Loading />
 		</div>
-	{:else if !$user && hasAccount && $page.route.id != "/password-reset" && $page.route.id != "/password-request"}
+	{:else if !$user && hasAccount && $page.route.id != "/password-request"}
 		<Banner />
 		<br />
 		<div class="flex">
@@ -86,7 +86,7 @@
 				</div>
 			</div>
 		</div>
-	{:else if !$user && !hasAccount && $page.route.id != "/password-reset" && $page.route.id != "/password-request"}
+	{:else if !$user && !hasAccount && $page.route.id != "/password-request"}
 		<Banner />
 		<br />
 		<div class="flex">
