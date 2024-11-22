@@ -4,6 +4,9 @@
  * configuration should not be checked into source control.
  */
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const config = {
 	GUILD_ID: process.env.GUILD_ID,
 	DISCORD_TOKEN: process.env.BOT_TOKEN,
