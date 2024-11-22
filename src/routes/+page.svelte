@@ -18,7 +18,7 @@
 	let discord;
 	let discord_id;
 	let initials;
-	let math_comp_background;
+	let background;
 	let amc_score;
 
 	user.subscribe(async (v) => {
@@ -28,7 +28,7 @@
 				full_name,
 				discord,
 				initials,
-				math_comp_background,
+				background,
 				amc_score,
 				discord_id,
 			} = data);
@@ -39,7 +39,7 @@
 				discord = "";
 				initials = "";
 				amc_score = "";
-				math_comp_background = "";
+				background = "";
 			} else {
 				handleError(error);
 				toast.error(error.message);
@@ -70,14 +70,12 @@
 				throw new Error("Initials must be all uppercase letters");
 			} /**else if (amc_score < 0 || amc_score > 150) {
 				throw new Error("AMC Score needs to be valid");
-			} */ else if (math_comp_background.length <= 0) {
-				throw new Error("Math competition background cannot be empty");
-			} else {
+			} */ else {
 				const updates = {
 					id: get(user).id,
 					full_name,
 					initials,
-					math_comp_background,
+					background,
 					email: get(user).email,
 				};
 
@@ -141,9 +139,9 @@
 			</div>
 			<br />
 			<TextArea
-				placeholder="Math Competition Background"
+				placeholder="Background"
 				class="inputField"
-				bind:value={math_comp_background}
+				bind:value={background}
 			/> <br />
 			<Button title="Submit" fontSize="1.5em" />
 			<br />
