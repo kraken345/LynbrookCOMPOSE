@@ -479,7 +479,8 @@ export async function insertTopics(topics: string[]) {
 export async function getGlobalTopics(customSelect: string = "*") {
 	let { data: global_topics, error } = await supabase
 		.from("global_topics")
-		.select(customSelect);
+		.select(customSelect)
+		.order("id", { ascending: true });
 	if (error) throw error;
 	return global_topics;
 }
