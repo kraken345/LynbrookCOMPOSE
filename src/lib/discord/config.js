@@ -4,6 +4,9 @@
  * configuration should not be checked into source control.
  */
 
+import dotenv from 'dotenv';
+dotenv.config()
+
 const config = {
 	GUILD_ID: process.env.GUILD_ID,
 	DISCORD_TOKEN: process.env.BOT_TOKEN,
@@ -12,5 +15,7 @@ const config = {
 	DISCORD_REDIRECT_URI: process.env.VITE_BASE_URL + "/api/discord-oauth-callback",
 	COOKIE_SECRET: process.env.COOKIE_SECRET,
 };
+
+console.log("CONFIG", config);
 
 export default config;
