@@ -18,7 +18,7 @@
 	let discord;
 	let discord_id;
 	let initials;
-	let background;
+	let math_comp_background;
 	let amc_score;
 
 	let user_id;
@@ -31,7 +31,7 @@
 				full_name,
 				discord,
 				initials,
-				background,
+				math_comp_background,
 				amc_score,
 				discord_id,
 			} = data);
@@ -42,7 +42,7 @@
 				discord = "";
 				initials = "";
 				amc_score = "";
-				background = "";
+				math_comp_background = "";
 			} else {
 				handleError(error);
 				toast.error(error.message);
@@ -78,7 +78,7 @@
 					id: get(user).id,
 					full_name,
 					initials,
-					background,
+					math_comp_background,
 					email: get(user).email,
 				};
 
@@ -144,7 +144,7 @@
 			<TextArea
 				placeholder="Background"
 				class="inputField"
-				bind:value={background}
+				bind:value={math_comp_background}
 			/> <br />
 			<Button title="Submit" fontSize="1.5em" />
 			<br />
