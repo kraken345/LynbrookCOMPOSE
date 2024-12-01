@@ -175,10 +175,10 @@
 
 		const labels = x_times;
 		let primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-		let ideaColor = LightenDarkenColor(primaryColor, 50); // Lighten by 20%
-		let endorseColor = LightenDarkenColor(primaryColor, 0);
-		let onTestColor = LightenDarkenColor(primaryColor, -50);
-		let publishedColor = LightenDarkenColor(primaryColor, -100);
+		let ideaColor = LightenDarkenColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-light').trim(), 30); // Lighten by 20%
+		let endorseColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-light').trim();
+		let onTestColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+		let publishedColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim();
 
 		const data = {
 		labels: labels,
