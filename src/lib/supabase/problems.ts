@@ -498,3 +498,10 @@ export async function getProblemCounts(customSelect: string = "*") {
 	if (error) throw error;
 	return problemCountsData;
 }
+
+export async function getProblemLeaderboard() {
+	let selectQuery = supabase.from("problem_writers_problem_counts").select("*");
+	let { data, error } = await selectQuery;
+	if (error) throw error;
+	return data;
+}
