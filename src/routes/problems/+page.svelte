@@ -13,6 +13,7 @@
 	import { fetchSettings } from "$lib/supabase/settings";
 	import { Chart, registerables } from 'chart.js';
 	import annotationPlugin from 'chartjs-plugin-annotation';
+	import { LightenDarkenColor } from "$lib/utils/Colors.svelte";
 
 	import {
 		getImages,
@@ -99,24 +100,22 @@
 			console.log("PROBLEMS", problems);
 			console.log(scheme.progress.after);
 			time_filtered_problems = await getProblems({
-				// after: new Date(scheme.progress.after),
-				after: new Date('03/01/2024'),
-				// before: new Date(scheme.progress.before),
-				before: new Date()
+				after: new Date(scheme.progress.after),
+				before: new Date(scheme.progress.before)
 			});
 			time_filtered_problems = sortByDate(time_filtered_problems, 'created_at');
 			
 			// console.log(time_filtered_problems)
 
-			// var change = (Date.parse(scheme.progress.before) - Date.parse(scheme.progress.after))/10;
-			var change = (Date.now() - new Date('03/01/2024'))/10
+			var change = (Date.now() - Date.parse(scheme.progress.after))/10;
+			//var change = (Date.now() - new Date('03/01/2024'))/10
 
 			const x_times = [];
 			const y_times = {};
 			var j = 0;
 
 			for (let i = 0; i <= 10; i++){
-				const time = new Date(Date.parse(new Date('03/01/2024')) + i*change);
+				const time = new Date(Date.parse(scheme.progress.after) + i * change);
 				x_times.push(time.toLocaleString("en-US").split(",")[0]);
 				while (j < time_filtered_problems.length && new Date(Date.parse(time_filtered_problems[j].created_at)) - time <= 0){
 					if (y_times[time_filtered_problems[j].status] == null){
@@ -175,6 +174,12 @@
 			const ctx = document.getElementById('testChart').getContext('2d');
 
 		const labels = x_times;
+		let primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+		let ideaColor = LightenDarkenColor(primaryColor, 100); // Lighten by 20%
+		let endorseColor = LightenDarkenColor(primaryColor, 50);
+		let onTestColor = primaryColor;
+		let publishedColor = LightenDarkenColor(primaryColor, -50);
+
 		const data = {
 		labels: labels,
 		datasets: [
@@ -182,30 +187,30 @@
 				label: 'Ideas',
 				data: y_times["Idea"],
 				fill: false,
-				borderColor: 'rgb(75, 192, 192)',
-				tension: 0.1
-			},
-			{
-				label: 'Published',
-				data: y_times['Published'],
-				fill: false,
-				borderColor: 'purple',
-				tension: 0.1
-			},
-			{
-				label: 'On Test',
-				data: y_times['On Test'],
-				fill: false,
-				borderColor: 'green',
+				borderColor: ideaColor,
 				tension: 0.1
 			},
 			{
 				label: 'Endorsed',
 				data: y_times['Endorsed'],
 				fill: false,
-				borderColor: 'rgb(0,0,139)',
+				borderColor: endorseColor,
 				tension: 0.1
-			}
+			},
+			{
+				label: 'On Test',
+				data: y_times['On Test'],
+				fill: false,
+				borderColor: onTestColor,
+				tension: 0.1
+			},
+			{
+				label: 'Published',
+				data: y_times['Published'],
+				fill: false,
+				borderColor: publishedColor,
+				tension: 0.1
+			},
 	]
 		};
 		const options = {
@@ -216,7 +221,7 @@
 					type: 'line',
 					yMin: 200,
 					yMax: 200,
-					borderColor: 'rgb(75, 192, 192)',
+					borderColor: ideaColor,
 					borderWidth: 2,
 					borderDash: [6,6],
 					label: {
@@ -224,14 +229,14 @@
 						enabled: true,
 						position: 'end',
 						backgroundColor: 'rgba(255, 255, 255, 0.8)',
-						color: 'rgb(75, 192, 192)',
+						color: ideaColor,
 					}
 				},
 				line2: {
 					type: 'line',
 					yMin: 150,
 					yMax: 150,
-					borderColor: 'rgb(0, 0, 139)',
+					borderColor: endorseColor,
 					borderWidth: 2,
 					borderDash: [6,6],
 					label: {
@@ -239,14 +244,14 @@
 						enabled: true,
 						position: 'end',
 						backgroundColor: 'rgba(255, 255, 255, 0.8)',
-						color: 'rgb(0, 0, 139)',
+						color: endorseColor,
 					}
 				},
 				line3: {
 					type: 'line',
 					yMin: 120,
 					yMax: 120,
-					borderColor: 'green',
+					borderColor: onTestColor,
 					borderWidth: 2,
 					borderDash: [6,6],
 					label: {
@@ -254,7 +259,7 @@
 						enabled: true,
 						position: 'end',
 						backgroundColor: 'rgba(255, 255, 255, 0.8)',
-						color: 'green',
+						color: onTestColor,
 					}
 				}
 			}
