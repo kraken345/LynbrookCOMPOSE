@@ -8,6 +8,7 @@
 		ToolbarSearch,
 		Pagination,
 		MultiSelect,
+		Tag
 	} from "carbon-components-svelte";
 	import Rating from "$lib/components/Rating.svelte";
 	import { formatDate } from "$lib/formatDate.js";
@@ -37,10 +38,12 @@
 	export let showList = [
 		"full_name",
 		"topics_short",
-		"sub_topics",
 		"average_difficulty",
 		"average_quality",
-		"unresolved_count",
+		"status",
+		"feedback_status",
+		"problem_tests",
+		"created_at"
 	];
 
 	const dispatch = createEventDispatcher();
@@ -60,7 +63,7 @@
 	let pageSize = 25;
 	let page = 1;
 
-	let editHeader = { key: "edit", value: "", width: "30px" };
+	let editHeader = { key: "edit", value: "", width: "50px" };
 
 	let headers = [
 		{
@@ -68,42 +71,71 @@
 			value: "Author",
 			short: "Author",
 			icon: "ri-user-fill",
+			width: "10%"
 		},
 		{
 			key: "topics_short",
 			value: "Topics",
 			short: "Topics",
 			icon: "ri-pie-chart-2-fill",
-		},
-		{
-			key: "problem_tests",
-			value: "Tests",
-			short: "Tests",
-			icon: "ri-archive-fill",
+			width: "15%"
 		},
 		{
 			key: "sub_topics",
 			value: "Subtopics",
 			short: "SubTps",
 			icon: "ri-node-tree",
+			width: "20%"
 		},
 		{
 			key: "average_difficulty",
 			value: "Difficulty",
 			short: "Diff",
 			icon: "ri-bar-chart-2-fill",
+			width: "7%"
 		},
 		{
 			key: "average_quality",
 			value: "Quality",
 			short: "Qlty",
 			icon: "ri-star-fill",
+			width: "7%"
 		},
 		{
 			key: "unresolved_count",
 			value: "Feedback",
 			short: "Fdbk",
 			icon: "ri-flag-fill",
+			width: "10%"
+		},
+		{
+			key: "status",
+			value: "Stage",
+			short: "Stage",
+			icon: "ri-stairs-fill",
+			width: "10%",
+			sort: (a, b) => {
+				const order = ['Draft', 'Idea', 'Endorsed', 'On Test', 'Published', 'Archived'];
+				return order.indexOf(a) - order.indexOf(b);
+			}
+		},
+		{
+			key: "feedback_status",
+			value: "Status",
+			short: "Status",
+			icon: "ri-feedback-fill",
+			width: "10%",
+			sort: (a, b) => {
+				const order = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Complete'];
+				return order.indexOf(a) - order.indexOf(b);
+			}
+		},
+		{
+			key: "problem_tests",
+			value: "Tests",
+			short: "Tests",
+			icon: "ri-file-list-3-fill",
+			width: "15%"
 		},
 		{
 			key: "created_at",
@@ -113,10 +145,11 @@
 		},
 		{
 			key: "edited_at",
-			value: "Edit",
+			value: "Edited",
 			icon: "ri-calendar-todo-fill",
 		},
 	];
+
 
 	$: headersF = headers.filter((row) => showList.includes(row.key));
 	$: curHeaders = [
@@ -232,10 +265,6 @@
 				text: "SubTopic",
 			},
 			{
-				id: "problem_tests",
-				text: "Test Name",
-			},
-			{
 				id: "average_difficulty",
 				text: "Avg. Difficulty",
 			},
@@ -244,8 +273,16 @@
 				text: "Avg. Quality",
 			},
 			{
-				id: "unresolved_count",
-				text: "Feedback",
+				id: "status",
+				text: "Stage",
+			},
+			{
+				id: "feedback_status",
+				text: "Status",
+			},
+			{
+				id: "problem_tests",
+				text: "Tests",
 			},
 			{
 				id: "created_at",
@@ -255,9 +292,12 @@
 				id: "edited_at",
 				text: "Edited on",
 			},
+			
 		]}
 	/>
 </div>
+
+
 
 <div
 	class="flex-dir-col"
@@ -268,6 +308,7 @@
 		size="compact"
 		expandable
 		sortable
+		batchExpansion
 		{sortKey}
 		{sortDirection}
 		{selectable}
@@ -322,14 +363,15 @@
 					<div>
 						{cell.value + 1}
 					</div>
-				{:else if cell.key === "topics"}
-					{console.log(cell.value)}
+				{:else if cell.key === "topics_short"}
 					<div style="overflow: hidden;">
-						{cell.value == null || cell.value == ""
-							? "None"
-							: width > 700
-							? cell.value
-							: mobileFriendly[cell.value]}
+						{#if cell.value == null || cell.value == ""}
+							<Tag type="gray">None</Tag>
+						{:else}
+							{#each cell.value.split(", ") as topic}
+								<Tag type="gray">{topic}</Tag>
+							{/each}
+						{/if}
 					</div>
 				{:else if cell.key === "author"}
 					<div style="overflow: hidden;">
@@ -363,6 +405,54 @@
 							round={2}
 							style="align-items: left"
 						/>
+					</div>
+				{:else if cell.key === "status"}
+					<div
+						style="overflow: hidden; display: flex; align-items: flex-start;"
+					>
+						{#if cell.value == "Draft"}
+							<Tag type="gray">Draft</Tag>
+						{:else if cell.value == "Idea"}
+							<Tag type="blue">Idea</Tag>
+						{:else if cell.value == "Endorsed"}
+							<Tag type="cyan">Endorsed</Tag>
+						{:else if cell.value == "On Test"}
+							<Tag type="green">On Test</Tag>
+						{:else if cell.value == "Published"}
+							<Tag type="purple">Published</Tag>
+						{:else if cell.value == "Archived"}
+							<Tag type="high-contrast">Archived</Tag>
+						{/if}
+					</div>
+				{:else if cell.key === "feedback_status"}
+					<div
+						style="overflow: hidden; display: flex; align-items: flex-start;"
+					>
+						{#if cell.value == "Needs Review"}
+							<Tag type="magenta">Needs Review</Tag>
+						{:else if cell.value == "Awaiting Feedback"}
+							<Tag type="blue">Awaiting Feedback</Tag>
+						{:else if cell.value == "Awaiting Endorsement"}
+							<Tag type="teal">Awaiting Endorsement</Tag>
+						{:else if cell.value == "Awaiting Testsolve"}
+							<Tag type="cyan">Awaiting Testsolve</Tag>
+						{:else if cell.value == "Complete"}
+							<Tag type="green">Complete</Tag>
+						{:else if cell.value == "Archived"}
+							<Tag type="high-contrast">Archived</Tag>
+						{/if}
+					</div>
+				{:else if cell.key === "problem_tests"}
+					<div
+						style="overflow: hidden; display: flex; align-items: flex-start;"
+					>
+						{#if row.problem_tests && row.problem_tests.length > 0}
+							{#each row.problem_tests.split(", ") as test}
+								<Tag type="warm-gray">{test}</Tag>
+							{/each}
+						{:else}
+							-
+						{/if}
 					</div>
 				{:else}
 					<div style="overflow: hidden;">

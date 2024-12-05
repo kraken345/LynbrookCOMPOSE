@@ -11,16 +11,33 @@
 	import { handleError } from "$lib/handleError";
 	import Latex from "$lib/components/Latex.svelte";
 	import toast from "svelte-french-toast";
-	export let problemFeedback = {};
+	export let problemFeedback = 
+		{
+			problem_id: null,
+			quality: null,
+			difficulty: null,
+			feedback: null,
+			correct: null,
+			solver_id: null,
+			testsolve_id: null,
+			time_elapsed: 0,
+		};
 	console.log("FEDBACK", problemFeedback);
 	export let problem;
-	console.log("PROB", problem.id);
 	export let problemNumber = null;
 	export let testsolve_id = null;
 	export let user_id = null;
+	$: {
+		problemFeedback.problem_id = problem.id;
+		problemFeedback.solver_id = user_id;
+		problemFeedback.testsolve_id = testsolve_id;
+	}
+	console.log("TPROBS", problemFeedback);
 	export let reviewing = false;
 	export let lastTime = new Date();
+	export let endorsing = false;
 	export let givingFeedback = false;
+	export let autoUpdate = true;
 	let screen_width = screen.width;
 	console.log("PROBLEM", problem)
 	import {
@@ -45,33 +62,21 @@
 			toast.error(error.message);
 		}
 	})();
+
+	function updateFeedback() {
+		if (!autoUpdate) return;
+		upsertProblemFeedback([problemFeedback]);
+	}
 	
-	function changeChecked(id) {
-		const feedback = [
-			{
-				problem_id: id,
-				testsolve_id: testsolve_id,
-				solver_id: user_id,
-				correct: problemFeedback.correct,
-			},
-		];
-		upsertProblemFeedback(feedback);
+	function changeChecked() {
+		updateFeedback();
 	}
 
-	function changeFeedback(id) {
-		const feedback = [
-			{
-				problem_id: id,
-				testsolve_id: testsolve_id,
-				solver_id: user_id,
-				feedback: problemFeedback.feedback,
-			},
-		];
-		upsertProblemFeedback(feedback);
+	function changeFeedback() {
+		updateFeedback();
 	}
 
-	let diffWarn = null;
-	function changeDifficulty(id) {
+	function changeDifficulty() {
 		console.log(problemFeedback);
 		const num = parseInt(problemFeedback.difficulty);
 		console.log(num, "NUM");
@@ -79,15 +84,8 @@
 			problemFeedback.difficulty == "" ||
 			(!isNaN(num) && num >= 1 && num <= 10)
 		) {
-			const feedback = [
-				{
-					problem_id: id,
-					testsolve_id: testsolve_id,
-					solver_id: user_id,
-					difficulty: num,
-				},
-			];
-			upsertProblemFeedback(feedback);
+			problemFeedback.difficulty = num;
+			updateFeedback();
 		} else {
 			toast.error("You must enter an integer from 1-10, or leave it blank");
 			problemFeedback.difficulty = "";
@@ -95,8 +93,7 @@
 		// Check if the value is within the range of 1 to 10 (inclusive)
 	}
 
-	let qualWarn = null;
-	function changeQuality(id) {
+	function changeQuality() {
 		console.log(problemFeedback);
 		const num = parseInt(problemFeedback.quality);
 		console.log(num, "NUM");
@@ -104,15 +101,8 @@
 			problemFeedback.quality == "" ||
 			(!isNaN(num) && num >= 1 && num <= 10)
 		) {
-			const feedback = [
-				{
-					problem_id: id,
-					testsolve_id: testsolve_id,
-					solver_id: user_id,
-					quality: num,
-				},
-			];
-			upsertProblemFeedback(feedback);
+			problemFeedback.quality = num;
+			updateFeedback();
 		} else {
 			toast.error("You must enter an integer from 1-10, or leave it blank");
 			problemFeedback.quality = "";
@@ -124,23 +114,9 @@
 		const nowTime = new Date().getTime();
 		const problemTime =
 			nowTime - lastTime + problemFeedback.time_elapsed;
-			console.log("T", problemTime);
-			console.log("I", nowTime);
-			console.log("M", lastTime);
-			console.log("E", problemFeedback.time_elapsed);
 		lastTime = nowTime;
-
-		const feedback = [
-			{
-				problem_id: id,
-				testsolve_id: testsolve_id,
-				solver_id: user_id,
-				answer: problemFeedback.answer,
-				time_elapsed: problemTime, //time elapsed becomes undefined
-			},
-		];
 		problemFeedback.time_elapsed = problemTime;
-		upsertProblemFeedback(feedback);
+		updateFeedback();
 		console.log("f", problemFeedback.time_elapsed);
 	}
 
@@ -194,7 +170,7 @@
 								labelText={reviewing ? "Your answer" : "Answer"}
 								disabled={reviewing}
 								bind:value={problemFeedback.answer}
-								on:blur={(e) => changeAnswer(e, problem.id)}
+								on:blur={changeAnswer}
 							/>
 						</div>
 						{#if reviewing}
@@ -202,15 +178,16 @@
 								<Checkbox
 									labelText="Correct?"
 									bind:checked={problemFeedback.correct}
-									on:change={() => changeChecked(problem.id)}
+									on:change={changeChecked}
 								/>
 							</div>
 						{/if}
+						<br>
 						<div>
 							<TextArea
 								labelText="Feedback"
 								bind:value={problemFeedback.feedback}
-								on:blur={(e) => changeFeedback(problem.id)}
+								on:blur={changeFeedback}
 							/>
 						</div>
 						{#if reviewing}
@@ -222,10 +199,7 @@
 										placeholder={"1-10"}
 										bind:value={problemFeedback
 											.difficulty}
-										on:change={(e) => {
-											console.log("CHANGED DIFF", e);
-											changeDifficulty(problem.id);
-										}}
+										on:change={changeDifficulty}
 									/>
 								</div>
 								<div style="margin: 3px">
@@ -233,9 +207,7 @@
 										labelText={"Quality"}
 										placeholder={"1-10"}
 										bind:value={problemFeedback.quality}
-										on:change={(e) => {
-											changeQuality(problem.id);
-										}}
+										on:change={changeQuality}
 									/>
 								</div>
 							</div>

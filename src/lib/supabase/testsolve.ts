@@ -1,13 +1,14 @@
 import { supabase } from "../supabaseClient";
 import { getProblem } from "$lib/supabase/problems";
-import { getUser, fetchSettings } from "$lib/supabase";
+import { getUser, fetchSettings, defaultSettings } from "$lib/supabase";
 import { formatDate } from "$lib/formatDate";
 
-let scheme = {};
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000'; // Set your base URL here
+let scheme = defaultSettings;
 
 // Function to fetch settings
 async function loadSettings() {
-    scheme = await fetchSettings(); // Fetch settings from the database
+	scheme = await fetchSettings(); // Fetch settings from the database
 }
 
 export interface TestsolverRequest {
@@ -504,8 +505,6 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 		// TODO: Set const `thread` that gets the discord threadID from problem_feedback
 		const discord_id = solver.discord_id;
 		const solver_name = solver.full_name;
-		const discordToken = import.meta.env.VITE_BOT_TOKEN;
-		console.log(discordToken);
 		// The following is an attempt to fetch the user to display their icon in the embed. I kept getting a 401 Unauthorized Error and gave up
 		/** 
 		const response = await fetch(`https://discord.com/api/v10/users/@me`, {
@@ -520,7 +519,6 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 		const data = await response.json();
 		console.log(data);
 		*/
-		console.log("DISCORD_ID", problem);
 		const user = await getUser(problem.author_id);
 		const embed = {
 			title: "Feedback received on problem " + user.initials + problem.id,
@@ -565,8 +563,13 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 			url: scheme.url + "/problems/" + problem.id, // The external URL you want to link to
 		};
 		if (problem.discord_id) {
-			const response = await fetch("/api/discord/feedback", {
+			console.log("MAKING FETCH")
+			const response = await fetch(`${scheme.url}/api/discord/feedback`, {
 				method: "POST",
+				headers: {
+					"Content-Type": "application/json", // Ensure the content type is set
+					"Accept": "application/json", // Accept JSON response
+				},
 				body: JSON.stringify({
 					userId: problem.author_id,
 					threadID: problem.discord_id,
@@ -597,8 +600,12 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 				url: messageUrl,
 				label: "View Thread",
 			};
-			await fetch("/api/discord/dm", {
+			await fetch(`${scheme.url}/api/discord/dm`, {
 				method: "POST",
+				headers: {
+					"Content-Type": "application/json", // Ensure the content type is set
+					"Accept": "application/json", // Accept JSON response
+				},
 				body: JSON.stringify({
 					userId: problem.author_id,
 					message: {
@@ -614,8 +621,12 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 				}),
 			});
 		} else {
-			await fetch("/api/discord/dm", {
+			await fetch(`${scheme.url}/api/discord/dm`, {
 				method: "POST",
+				headers: {
+					"Content-Type": "application/json", // Ensure the content type is set
+					"Accept": "application/json", // Accept JSON response
+				},
 				body: JSON.stringify({
 					userId: problem.author_id,
 					message: {
@@ -637,40 +648,43 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
 /**
  * Gets a random problem
  */
-export async function getRandomProblem(activeUserId) {
+export async function getRandomProblems(activeUserId, endorsing = false) {
 	try{
-
-		let { data: feedback, error } = await supabase
-			.from('problem_feedback')
-			.select('problem_id')
-			.eq('solver_id', activeUserId);
-		if (error) throw error;
-		feedback = feedback ? `(${feedback.map(f => f.problem_id).join(", ")})` : "()" // Format as (id1, id2, id3)
-		console.log("FEEDBACK", feedback);
 		console.log("STARTING SEARCH")
 		// Get problems that weren't written by the user and that the user hasn't given feedback for
-		let { data: problems, error2 } = await supabase
+		let query = supabase
 			.from('full_problems')
 			.select('*')
 			.neq('author_id', activeUserId)
 			.eq('archived', false)
-			.not('id', 'in', feedback);
-		
-		if (error2) throw error2;
-		console.log("FULL PROBLEMS", problems);
-		
-		if (problems.length === 0) {
-			console.log('No eligible problems found.');
-			return null; // nothing found
+
+		if (endorsing) {
+			query = query.eq('feedback_status', 'Awaiting Endorsement');
+		} else {
+			let { data: feedback, error } = await supabase
+				.from('problem_feedback')
+				.select('problem_id')
+				.eq('solver_id', activeUserId)
+				.not('problem_id', 'is', null)
+				.eq('resolved', false);
+			if (error) throw error;
+			feedback = feedback ? `(${feedback.map(f => f.problem_id).join(", ")})` : "()" // Format as (id1, id2, id3)
+			console.log("FEEDBACK", feedback)
+			query = query.not('id', 'in', feedback);
 		}
-		  //Find problem with the least feedback count
-		problems.sort((a, b) => a.feedback_count - b.feedback_count);
-		  
-		//If there are multiple problems with the least feedback, select one randomly
-		const leastFeedbackProblems = problems.filter(problem => problem.feedback_count === problems[0].feedback_count);
-		const randomProblem = leastFeedbackProblems[Math.floor(Math.random() * leastFeedbackProblems.length)];
-		console.log("RANDOM PROBLEM", randomProblem)
-		return randomProblem
+		let { data: problems, error2 } = await query
+		console.log("QUERY", query)
+
+		console.log("PROBLEMS", problems)
+
+		if (error2) throw error2;
+
+		problems.sort(() => Math.random() - 0.5);
+		const feedbackStatusOrder = ["Awaiting Feedback", "Awaiting Endorsement", "Awaiting Testsolve", "Needs Review", "Complete"];
+		problems.sort((a, b) => {
+			return feedbackStatusOrder.indexOf(a.feedback_status) - feedbackStatusOrder.indexOf(b.feedback_status);
+		});
+		return problems
 
 		
 	} catch (error) {
@@ -686,9 +700,9 @@ export async function getRandomProblem(activeUserId) {
  *
  * @param problem_feedback any[]
  */
-export async function addProblemTestsolveAnswer(problem_feedback: any[]) {
+export async function addProblemFeedback(problem_feedback: any[], supabaseClient = supabase) {
 	console.log("adding", problem_feedback);
-	const { error: error } = await supabase
+	const { error: error } = await supabaseClient
 		.from("problem_feedback")
 		.insert(problem_feedback);
 	if (error) throw error;
@@ -786,3 +800,4 @@ export async function insertTestsolveFeedbackAnswers(testsolve_data: any[]) {
 		.insert(testsolve_data);
 	if (error) throw error;
 }
+

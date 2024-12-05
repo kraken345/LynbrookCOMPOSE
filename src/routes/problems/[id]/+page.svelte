@@ -55,6 +55,7 @@
 				loaded = true;
 				return;
 			}
+			
 			console.log("PROBLEM", problem)
 
 			await fetchTopic(problem.id);
@@ -103,9 +104,11 @@
 
 {#if loaded}
 	{#if problem}
-		<h1>Problem {problem.id} ({problem.front_id})</h1>
+		<h1>{#if problem.status == "Draft"}Draft{:else}Problem{/if} {problem.id} ({problem.front_id})</h1>
 		<br />
 		<Button href="/problems" title="Back to Problems" />
+		<br /><br />
+		<Button href={"/problems/" + problem.id + "/solve"} title="Testsolve Problem" />
 		<br /><br />
 		<Button href={"/problems/" + problem.id + "/edit"} title="Edit Problem" />
 		<br />

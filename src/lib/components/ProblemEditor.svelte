@@ -29,6 +29,7 @@
 	let loading = true;
 
 	let topics = originalProblem?.topic ?? []; // This will be a list of integer topic ids
+	console.log(topics)
 	let all_topics = []; // [{id: 1, text: "Algebra"}]
 	let topicsStr = "Select a topic...";
 	$: if (topics.length > 0 && all_topics.length > 0) {
@@ -130,6 +131,7 @@
 			const global_topics = await getGlobalTopics();
 			all_topics = [];
 			for (const single_topic of global_topics) {
+				console.log("TOPIC", single_topic)
 				all_topics.push({
 					id: single_topic.id,
 					text: single_topic.topic,
@@ -146,11 +148,12 @@
 	}
 	getTopics();
 
-	async function submitPayload() {
+	async function submitPayload(isDraft = false) {
 		try {
+			isDisabled = true
 			if (
 				fields.problem &&
-				fields.comment &&
+				//fields.comment &&
 				fields.answer &&
 				fields.solution &&
 				topics
@@ -160,6 +163,10 @@
 				} else if (problemFiles.some((f) => f.size > fileSizeLimit)) {
 					throw new Error("File too large");
 				} else {
+					console.log("OGSTATUS", originalProblem?.status)
+					console.log(isDraft)
+					const status = (isDraft ? "Draft" : (originalProblem?.status == "Draft" || !originalProblem?.status ? "Idea" : originalProblem?.status))
+					console.log("STATUS", status)
 					const payload = {
 						problem_latex: fields.problem,
 						comment_latex: fields.comment,
@@ -170,13 +177,14 @@
 						difficulty: difficulty ? parseInt(difficulty) : 0,
 						edited_at: new Date().toISOString(),
 						problem_files: problemFiles,
+						status: status,
 					};
 					submittedText = "Submitting problem...";
 					await onSubmit(payload);
-					submittedText = "Problem submitted.";
+					submittedText = isDraft ? "Draft Saved" : "Problem Submitted";
 				}
 			} else {
-				throw new Error("Not all the fields have been filled out");
+				throw new Error("Not all the required fields have been filled out");
 			}
 		} catch (error) {
 			handleError(error);
@@ -200,6 +208,7 @@
 						items={all_topics}
 						label={topicsStr}
 						required={true}
+						sortItem={(a, b) => 0}
 					/>
 					<TextInput
 						bind:value={subTopic}
@@ -366,12 +375,24 @@
 					type="submit"
 					size="small"
 					disabled={isDisabled || problemFailed}
-					on:click={submitPayload}
+					on:click={() => {submitPayload()}}
 					style="width: 30em; border-radius: 2.5em; margin: 0; padding: 0;"
 				>
 					<p>Submit Problem</p>
-				</Button>
-
+				</Button><br><br>
+				{#if !originalProblem || originalProblem?.status == "Draft"}
+					<Button
+						kind="tertiary"
+						class="button"
+						type="submit"
+						size="small"
+						disabled={isDisabled || problemFailed}
+						on:click={() => {submitPayload(true)}}	
+						style="width: 30em; border-radius: 2.5em; margin: 0; padding: 0;"
+					>
+						<p>Save Draft</p>
+					</Button>
+				{/if}
 				<p>{submittedText}</p>
 				<br />
 			{/if}

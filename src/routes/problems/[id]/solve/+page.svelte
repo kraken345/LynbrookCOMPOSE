@@ -1,4 +1,5 @@
 <script lang="js">
+    import { page } from "$app/stores";
 	import TestProblems from "$lib/components/TestProblems.svelte";
     import Button from "$lib/components/Button.svelte";
     import Loading from "$lib/components/Loading.svelte";
@@ -71,7 +72,8 @@
 			if (!user_id) {
 				user_id = (await getThisUser()).id;
 			}
-            problems = await getRandomProblems(user_id);
+            problems = [await getProblem(Number($page.params.id))];
+            console.log("PROBLEMS", problems)
 		} catch (error) {
 			handleError(error);
 			toast.error(error.message);

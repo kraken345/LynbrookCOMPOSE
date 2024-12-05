@@ -66,12 +66,20 @@
 				{#if userRole >= 20}
 					<div class="fixedHr" />
 					<Link
+						href="/dashboard"
+						class={path == "dashboard" ? "active link" : "link"}
+					>
+						<p class="linkPara">Dashboard</p>
+					</Link>
+					<Link
 						href="/problems/new"
 						class={path == "problems/new" ? "active link" : "link"}
 					>
 						<p class="linkPara">Write New Problem</p>
 					</Link>
 					<br />
+				{/if}
+				{#if userRole >= 30}
 					<Link
 						href="/problems"
 						class={path == "problems" ? "active link" : "link"}
@@ -80,31 +88,37 @@
 					</Link>
 					<br />
 					<Link
-						href="/problems/import"
-						class={path == "problems/import" ? "active link" : "link"}
+						href="/leaderboard"
+						class={path == "leaderboard" ? "active link" : "link"}
 					>
-						<p class="linkPara">Import Problems</p>
+						<p class="linkPara">Leaderboard</p>
 					</Link>
 					<br />
-					<Link
-						href="/testsolve"
-						class={path == "testsolve" ? "active link" : "link"}
-					>
-						<p class="linkPara">View Testsolves</p>
-					</Link>
 					<Link
 						href="/problems/feedback"
 						class={path == "problems/feedback" ? "active link" : "link"}
 					>
 						<p class="linkPara">Give Feedback</p>
 					</Link>
-				{/if}
-				{#if userRole >= 30}
+					{#if userRole >= 33}
+						<Link
+							href="/problems/endorse"
+							class={path == "problems/endorse" ? "active link" : "link"}
+						>
+							<p class="linkPara">Endorse Problems</p>
+						</Link>
+					{/if}
 					<Link href="/tests" class={path == "tests" ? "active link" : "link"}>
 						<p class="linkPara">View Tests</p>
 					</Link>
 				{/if}
 				{#if userRole >= 10}
+					<Link
+						href="/testsolve"
+						class={path == "testsolve" ? "active link" : "link"}
+					>
+						<p class="linkPara">View Testsolves</p>
+					</Link>
 					<div class="fixedHr" />
 					<Link
 						href="/grading"
@@ -171,6 +185,12 @@
 						class={path == "admin/transfer-problem" ? "active link" : "link"}
 					>
 						<p class="linkPara">Admin: Transfer Problem</p>
+					</Link>
+					<Link
+						href="/problems/import"
+						class={path == "problems/import" ? "active link" : "link"}
+					>
+						<p class="linkPara">Admin: Import Problems</p>
 					</Link>
 					<br />
 					<Link
