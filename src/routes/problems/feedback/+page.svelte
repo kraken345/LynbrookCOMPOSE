@@ -15,6 +15,7 @@
 	let lastTime = startTime;
 	let reviewing = false;
     let problems = [];
+    $: currentProblem = problems[curIndex];
     let curIndex = 0;
 	let problemFeedback = 
 		{
@@ -94,7 +95,7 @@
         <h4><strong>Give Feedback:</strong></h4>
         {#if curIndex < problems.length}
             <div class="problems">
-                <TestProblems bind:problemFeedback={problemFeedback} problem={problems[curIndex]} {reviewing} givingFeedback={true} autoUpdate={false}></TestProblems>
+                <TestProblems bind:problemFeedback={problemFeedback} problem={currentProblem} {reviewing} givingFeedback={true} autoUpdate={false}></TestProblems>
             </div>
             <div class = "submit-button">
             {#if !reviewing}
