@@ -101,10 +101,7 @@
 			console.log(scheme.progress.after);
 			resetProblems();
 			loaded = true;
-			time_filtered_problems = await getProblems({
-				after: new Date(scheme.progress.after),
-				before: new Date(scheme.progress.before)
-			});
+			time_filtered_problems = await getProblems();
 			time_filtered_problems = sortByDate(time_filtered_problems, 'created_at');
 			
 			// console.log(time_filtered_problems)
@@ -232,6 +229,14 @@
 			const endorseDate = formatDate(scheme.progress.endorseDate) //scheme.progress.endorseDate
 			const testDate = formatDate(scheme.progress.testDate) //scheme.progress.testDate
 			const options = {
+				scales: {
+					x: {
+						ticks: {
+							autoSkip: true, // Automatically skips some labels
+							maxTicksLimit: Math.ceil(daysDiff / 7), // Limit the number of ticks displayed to every 2 weeks
+						}
+					}
+				},
 				plugins: {
 					annotation: {
 						annotations: {
