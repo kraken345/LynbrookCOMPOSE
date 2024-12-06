@@ -107,26 +107,26 @@
 			
 			// console.log(time_filtered_problems)
 
-			var change = (Date.now() - Date.parse(scheme.progress.after))/10;
-			//var change = (Date.now() - new Date('03/01/2024'))/10
-
 			const x_times = [];
 			const y_times = {};
 			var j = 0;
 
-			for (let i = 0; i <= 10; i++){
-				const time = new Date(Date.parse(scheme.progress.after) + i * change);
+			// Calculate the number of days between the after date and now
+			const daysDiff = Math.floor((Date.now() - Date.parse(scheme.progress.after)) / (1000 * 60 * 60 * 24));
+
+			for (let i = 0; i <= daysDiff; i++) {
+				const time = new Date(Date.parse(scheme.progress.after) + i * 24 * 60 * 60 * 1000); // Increment by day
 				x_times.push(time.toLocaleString("en-US").split(",")[0]);
-				while (j < time_filtered_problems.length && new Date(Date.parse(time_filtered_problems[j].created_at)) - time <= 0){
-					if (y_times[time_filtered_problems[j].status] == null){
-						y_times[time_filtered_problems[j].status] = [0]
+				while (j < time_filtered_problems.length && new Date(Date.parse(time_filtered_problems[j].created_at)) - time <= 0) {
+					if (y_times[time_filtered_problems[j].status] == null) {
+						y_times[time_filtered_problems[j].status] = [0];
 					}
 					const cur = y_times[time_filtered_problems[j].status][y_times[time_filtered_problems[j].status].length - 1];
 
-					while (y_times[time_filtered_problems[j].status].length < i + 1){
+					while (y_times[time_filtered_problems[j].status].length < i + 1) {
 						y_times[time_filtered_problems[j].status].push(cur);
 					}
-					y_times[time_filtered_problems[j].status][y_times[time_filtered_problems[j].status].length-1]+=1
+					y_times[time_filtered_problems[j].status][y_times[time_filtered_problems[j].status].length - 1] += 1;
 					j++;
 				}
 			}
@@ -173,103 +173,119 @@
 			userId = (await getThisUser()).id;
 			const ctx = document.getElementById('testChart').getContext('2d');
 
-		const labels = x_times;
-		let primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-		let ideaColor = LightenDarkenColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-light').trim(), 30); // Lighten by 20%
-		let endorseColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-light').trim();
-		let onTestColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-		let publishedColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim();
+			const labels = x_times;
+			let primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-tint').trim();
+			let ideaColor = LightenDarkenColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-light').trim(), 60); // Lighten by 20%
+			let endorseColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-light').trim();
+			let onTestColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+			let publishedColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim();
+			const pointRadius = 1;
+			const data = {
+				labels: labels,
+				datasets: [
+					{
+						label: 'Ideas',
+						data: y_times["Idea"],
+						fill: false,
+						borderColor: ideaColor,
+						tension: 0.1,
+						pointRadius
+					},
+					{
+						label: 'Endorsed',
+						data: y_times['Endorsed'],
+						fill: false,
+						borderColor: endorseColor,
+						tension: 0.1,
+						pointRadius
+					},
+					{
+						label: 'On Test',
+						data: y_times['On Test'],
+						fill: false,
+						borderColor: onTestColor,
+						tension: 0.1,
+						pointRadius
+					},
+					{
+						label: 'Published',
+						data: y_times['Published'],
+						fill: false,
+						borderColor: publishedColor,
+						tension: 0.1,
+						pointRadius
+					},
+				]
+			};
 
-		const data = {
-		labels: labels,
-		datasets: [
-			{
-				label: 'Ideas',
-				data: y_times["Idea"],
-				fill: false,
-				borderColor: ideaColor,
-				tension: 0.1
-			},
-			{
-				label: 'Endorsed',
-				data: y_times['Endorsed'],
-				fill: false,
-				borderColor: endorseColor,
-				tension: 0.1
-			},
-			{
-				label: 'On Test',
-				data: y_times['On Test'],
-				fill: false,
-				borderColor: onTestColor,
-				tension: 0.1
-			},
-			{
-				label: 'Published',
-				data: y_times['Published'],
-				fill: false,
-				borderColor: publishedColor,
-				tension: 0.1
-			},
-	]
-		};
-		const options = {
-		plugins: {
-			annotation: {
-			annotations: {
-				line1: {
-					type: 'line',
-					yMin: 200,
-					yMax: 200,
-					borderColor: ideaColor,
-					borderWidth: 2,
-					borderDash: [6,6],
-					label: {
-						content: 'Idea Target by Dec. 31',
-						enabled: true,
-						position: 'end',
-						backgroundColor: 'rgba(255, 255, 255, 0.8)',
-						color: ideaColor,
-					}
-				},
-				line2: {
-					type: 'line',
-					yMin: 150,
-					yMax: 150,
-					borderColor: endorseColor,
-					borderWidth: 2,
-					borderDash: [6,6],
-					label: {
-						content: 'Endorsed Target by Jan. 31',
-						enabled: true,
-						position: 'end',
-						backgroundColor: 'rgba(255, 255, 255, 0.8)',
-						color: endorseColor,
-					}
-				},
-				line3: {
-					type: 'line',
-					yMin: 120,
-					yMax: 120,
-					borderColor: onTestColor,
-					borderWidth: 2,
-					borderDash: [6,6],
-					label: {
-						content: 'On Test Target by Jan. 31',
-						enabled: true,
-						position: 'end',
-						backgroundColor: 'rgba(255, 255, 255, 0.8)',
-						color: onTestColor,
+			function formatDate(dateString) {
+				const date = new Date(dateString); // Set time to midnight
+				const options = { year: 'numeric', month: 'short', day: '2-digit' };
+				return date.toLocaleDateString('en-US', options);
+			}
+			const ideaGoal = scheme.progress.ideaGoal
+			const endorseGoal = scheme.progress.endorseGoal
+			const testGoal = scheme.progress.testGoal
+			const ideaDate = formatDate(scheme.progress.ideaDate) //scheme.progress.ideaDate
+			const endorseDate = formatDate(scheme.progress.endorseDate) //scheme.progress.endorseDate
+			const testDate = formatDate(scheme.progress.testDate) //scheme.progress.testDate
+			const options = {
+				plugins: {
+					annotation: {
+						annotations: {
+							line1: {
+								type: 'line',
+								yMin: ideaGoal,
+								yMax: ideaGoal,
+								borderColor: ideaColor,
+								borderWidth: 2,
+								borderDash: [6,6],
+								label: {
+									content: `Idea Target by ${ideaDate}`,
+									enabled: true,
+									position: 'end',
+									backgroundColor: 'rgba(255, 255, 255, 0.8)',
+									color: ideaColor,
+								}
+							},
+							line2: {
+								type: 'line',
+								yMin: endorseGoal,
+								yMax: endorseGoal,
+								borderColor: endorseColor,
+								borderWidth: 2,
+								borderDash: [6,6],
+								label: {
+									content: `Endorsed Target by ${endorseDate}`,
+									enabled: true,
+									position: 'end',
+									backgroundColor: 'rgba(255, 255, 255, 0.8)',
+									color: endorseColor,
+								}
+							},
+							line3: {
+								type: 'line',
+								yMin: testGoal,
+								yMax: 120,
+								borderColor: testGoal,
+								borderWidth: 2,
+								borderDash: [6,6],
+								label: {
+									content: `On Test Target by ${testDate}`,
+									enabled: true,
+									position: 'end',
+									backgroundColor: 'rgba(255, 255, 255, 0.8)',
+									color: onTestColor,
+								}
+							}
+						}
 					}
 				}
-			}
-			}
-		}
-		};
-		let lineChart;
+			};
+			let lineChart;
 
-		lineChart = new Chart(ctx, {type: 'line', data: data, options});
-			//getProblemLink();
+			lineChart = new Chart(ctx, {type: 'line', data: data, options});
+				//getProblemLink();
 			resetProblems();
 			loaded = true;
 			
