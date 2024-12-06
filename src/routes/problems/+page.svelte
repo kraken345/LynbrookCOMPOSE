@@ -99,6 +99,8 @@
 			all_problems = await getProblems({ customSelect: "*" });
 			console.log("PROBLEMS", problems);
 			console.log(scheme.progress.after);
+			resetProblems();
+			loaded = true;
 			time_filtered_problems = await getProblems({
 				after: new Date(scheme.progress.after),
 				before: new Date(scheme.progress.before)
@@ -286,8 +288,6 @@
 
 			lineChart = new Chart(ctx, {type: 'line', data: data, options});
 				//getProblemLink();
-			resetProblems();
-			loaded = true;
 			
 		} catch (error) {
 			handleError(error);
