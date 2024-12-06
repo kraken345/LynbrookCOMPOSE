@@ -268,7 +268,7 @@
 							line3: {
 								type: 'line',
 								yMin: testGoal,
-								yMax: 120,
+								yMax: testGoal,
 								borderColor: testGoal,
 								borderWidth: 2,
 								borderDash: [6,6],
