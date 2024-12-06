@@ -412,7 +412,7 @@
 
 			const resp = await fetch(
 				// make env variable before pushing
-				import.meta.env.VITE_PDF_GENERATOR_URL,
+				process.env.PDF_GENERATOR_URL,
 				{
 					method: "POST",
 					headers: {

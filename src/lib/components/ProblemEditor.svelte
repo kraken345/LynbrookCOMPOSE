@@ -29,6 +29,7 @@
 	let loading = true;
 
 	let topics = originalProblem?.topic ?? []; // This will be a list of integer topic ids
+	console.log(topics)
 	let all_topics = []; // [{id: 1, text: "Algebra"}]
 	let topicsStr = "Select a topic...";
 	$: if (topics.length > 0 && all_topics.length > 0) {
@@ -130,6 +131,7 @@
 			const global_topics = await getGlobalTopics();
 			all_topics = [];
 			for (const single_topic of global_topics) {
+				console.log("TOPIC", single_topic)
 				all_topics.push({
 					id: single_topic.id,
 					text: single_topic.topic,
@@ -206,6 +208,7 @@
 						items={all_topics}
 						label={topicsStr}
 						required={true}
+						sortItem={(a, b) => 0}
 					/>
 					<TextInput
 						bind:value={subTopic}
