@@ -149,6 +149,12 @@ export async function getProblems(options: ProblemSelectRequest = {}) {
 	}
 }
 
+/**
+ * Makes new Discord thread for a problem upon creation
+ *
+ * @param problem ProblemRequest (ie a row in the problems table in supabase)
+ * @returns Discord thread ID
+ */
 export async function makeProblemThread(problem: ProblemRequest) {
 	await loadSettings();
 	const user = await getUser(problem.author_id);
@@ -162,6 +168,7 @@ export async function makeProblemThread(problem: ProblemRequest) {
 		(x) => x.global_topics?.topic ?? "Unknown Topic",
 	);
 
+	// Create the embed
 	const embed = {
 		title: "Problem " + user.initials + problem.id,
 		//description: "This is the description of the embed.",
@@ -272,6 +279,27 @@ export async function makeProblemThread(problem: ProblemRequest) {
 	return threadData.id;
 }
 
+/**
+ * Updates a problem thread
+ *
+ * @param problem ProblemRequest (ie a row in the problems table in supabase)
+ * @param author_name string
+ * @returns Discord thread ID
+ */
+export async function updateProblemThread(problem: ProblemRequest, author_name: string) {
+	await loadSettings();
+	console.log("PROBLEM", problem);
+	console.log("AUTHOR", author_name);
+
+	// Get topics before updating thread (with possibly new topics)
+	const problem_topics = await getProblemTopics(
+		problem.id,
+		"topic_id,global_topics(topic)",
+	);
+	problem.topicArray = problem_topics.map(
+		(x) => x.global_topics?.topic ?? "Unknown Topic",
+	);
+}
 /**
  * Creates a single problem. No topic support yet
  *
