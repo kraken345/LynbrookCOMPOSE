@@ -198,8 +198,8 @@
 {#if loading}
 	<p>Loading problem editor...</p>
 {:else}
-	<div class="row editorContainer" style="grid-template-columns: 70% 30%;">
-		<div class="col">
+	<div class="row editorContainer">
+		<div class="col" style="overflow: auto; resize: horizontal; width: 60vw;">
 			<Form class="editorForm">
 				<FormGroup style="display: flex; align-items: end;">
 					<MultiSelect
@@ -417,6 +417,12 @@
 {/if}
 
 <style>
+	/* Resizable grid columns. See https://stackoverflow.com/a/53731196 */
+	.editorContainer {
+		grid-template: 1fr 
+		/ min-content 1fr;
+	}
+	
 	:global(.editorForm) {
 		padding: 20px;
 	}
