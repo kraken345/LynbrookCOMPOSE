@@ -121,7 +121,7 @@
 	{/if}
 	<div class="flex">
 		<div
-			style="border: 2px solid black;width: {widthPara}%;margin: 10px;padding: 10px;"
+			style="border: 2px solid black;width: {widthPara}%;margin: 10px;padding: 10px; resize: both; overflow: scroll;"
 		>
 			<p class="header">Problem</p>
 			<p id="problem-render">{@html latexes.problem}</p>
