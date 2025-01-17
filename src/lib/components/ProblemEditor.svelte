@@ -187,6 +187,7 @@
 				throw new Error("Not all the required fields have been filled out");
 			}
 		} catch (error) {
+			submittedText = error.message;
 			handleError(error);
 			toast.error(error.message);
 		}
