@@ -36,6 +36,7 @@
 		answer: "",
 		solution: "",
 	};
+
 	let fieldList = ["problem", "comment", "answer", "solution"];
 	let errorList = [];
 

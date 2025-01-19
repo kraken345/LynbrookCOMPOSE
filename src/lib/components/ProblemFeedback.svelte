@@ -293,7 +293,7 @@
 						{ key: "feedback", value: "Feedback", width: "50%" },
 						{ key: "answer", value: "Answer", width: "10%" },
 						{ key: "ratings", value: "Ratings", width: "15%" },
-						{ key: "resolved", value: "Resolved", width: "10%" },
+						{ key: "resolved", value: "Resolved", width: "10%" }
 					]}
 					rows={feedbackList}
 					{pageSize}
