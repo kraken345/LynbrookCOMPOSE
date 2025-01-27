@@ -93,7 +93,7 @@
 			}
 			
 			// Update discord thread using supabase problem data, authorname, 
-			updateProblemThread(data, authorName);
+			updateProblemThread(data.id, authorName);
 
 			fetchProblem();
 

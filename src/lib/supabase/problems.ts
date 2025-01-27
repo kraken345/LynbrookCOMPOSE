@@ -282,12 +282,14 @@ export async function makeProblemThread(problem: ProblemRequest) {
 /**
  * Updates a problem thread
  *
- * @param problem ProblemRequest (ie a row in the problems table in supabase)
+ * @param problem id of problem
  * @param author_name string
  * @returns Discord thread ID
  */
-export async function updateProblemThread(problem: ProblemRequest, author_name: string) {
+export async function updateProblemThread(problem_id: number, author_name: string) {
 	await loadSettings();
+	const problem = await getProblem(problem_id);
+	const user = await getUser(problem.author_id);
 	console.log("PROBLEM", problem);
 	console.log("AUTHOR", author_name);
 
@@ -299,6 +301,104 @@ export async function updateProblemThread(problem: ProblemRequest, author_name: 
 	problem.topicArray = problem_topics.map(
 		(x) => x.global_topics?.topic ?? "Unknown Topic",
 	);
+
+	// Create the embed
+	const embed = {
+		title: "Problem " + user.initials + problem.id,
+		//description: "This is the description of the embed.",
+		type: "rich",
+		color: parseInt(scheme.discord.embed_color, 16), // You can set the color using hex values
+		author: {
+			name: user.full_name,
+			//icon_url: "https://example.com/author.png", // URL to the author's icon
+		},
+		fields: [
+			{
+				name: "Problem",
+				value:
+					problem.problem_latex.length > 1023
+						? problem.problem_latex.substring(0, 1020) + "..."
+						: problem.problem_latex,
+				inline: false, // You can set whether the field is inline
+			},
+			{
+				name: "Answer",
+				value:
+					problem.answer_latex.length > 1019
+						? "||" + problem.answer_latex.substring(0, 1016) + "...||"
+						: "||" + problem.answer_latex + "||",
+				inline: false, // You can set whether the field is inline
+			},
+			{
+				name: "Solution",
+				value:
+					problem.solution_latex.length > 1019
+						? "||" + problem.solution_latex.substring(0, 1016) + "...||"
+						: "||" + problem.solution_latex + "||",
+				inline: false, // You can set whether the field is inline
+			},
+			{
+				name: "Comments",
+				value:
+					problem.comment_latex.length > 1019
+						? "||" + problem.comment_latex.substring(0, 1016) + "...||"
+						: "||" + problem.comment_latex + "||",
+				inline: false, // You can set whether the field is inline
+			},
+		],
+		footer: {
+			text: "COMPOSE",
+			icon_url: scheme.logo, // URL to the footer icon
+		},
+	};
+	let url = scheme.url
+	if (!scheme.url.startsWith("http")) {
+		url = "http://" + scheme.url
+	}
+	const viewButton = {
+		type: 2, // LINK button component
+		style: 5, // LINK style (5) for external links
+		label: "View Problem",
+		url: url + "/problems/" + problem.id, // The external URL you want to link to
+	};
+	const solveButton = {
+		type: 2, // LINK button component
+		style: 5, // LINK style (5) for external links
+		label: "Testsolve",
+		url: url + "/problems/" + problem.id + "/solve", // The external URL you want to link to
+	};
+	const tagResponse = await fetch("/api/discord/forum", {
+		method: "POST",
+		body: JSON.stringify({
+			channelId: scheme.discord.notifs_forum,
+			tags: problem.topicArray,
+		}),
+	});
+	const { tagIds } = await tagResponse.json();
+	console.log("MAKING FETCH");
+	console.log("PROBLEM", problem.problem_latex);
+	
+	const threadResponse = await fetch("/api/discord/update-thread", {
+		method: "PATCH",
+		body: JSON.stringify({
+			message: {
+				content: problem.problem_latex,
+				embeds: [embed],
+				components: [
+					{
+						type: 1,
+						components: [solveButton, viewButton],
+					},
+				],
+			},
+			name: embed.title,
+			applied_tags: tagIds,
+			message_id: problem.discord_id,
+		}),
+	});
+	console.log("THREAD RESPONSE", threadResponse);
+	const threadData = await threadResponse.json();
+	console.log("THREAD DATA 2", threadData);
 }
 /**
  * Creates a single problem. No topic support yet
