@@ -30,7 +30,6 @@
 	let loading = true;
 
 	let topics = originalProblem?.topic ?? []; // This will be a list of integer topic ids
-	console.log(topics)
 	let all_topics = []; // [{id: 1, text: "Algebra"}]
 	let topicsStr = "Select a topic...";
 	$: if (topics.length > 0 && all_topics.length > 0) {
@@ -92,20 +91,23 @@
 	const dmp = new DiffMatchPatch();
 
 	let problemHistory = []; // versions and patches
+	let allVersions = []; // contains reconstructed full versions with highlights
 
-	let allVersions = []; // contains reconstructed full versions
+	let lastVersion; // full text of the last version for comparison without highlights
+	let allExpanded = false;
 
 	// Function to save a new version or patch to Supabase
-	async function saveVersionHistoryToSupabase() {
+	async function saveVersionToSupabase() {
 		try {
 			const { data, error } = await supabase
 				.from("problems")
 				.update({ diffs: problemHistory })
-				.eq("id", originalProblem.id);
+				.eq("id", originalProblem.id)
+				.select("diffs");
 			if (error) throw error;
 			console.log("Version saved:", data);
 		} catch (err) {
-			console.error("Failed to save version history to Supabase:", err.message);
+			console.error("Failed to save version to Supabase:", err.message);
 		}
 	}
 
@@ -130,15 +132,21 @@
 
 	// Function to repopulate `problemHistory` from Supabase
 	async function loadHistoryFromSupabase() {
-		let history = await fetchVersionHistoryFromSupabase();
-		// If there is no history yet, add one that we may diff against later.
-		// This may still fail if we are just creating a new problem (so no ID exists).
-		if (!history || history.length == 0) {
-			await addVersion();
+		let history = [];
+		// Only try to fetch version history if problem previously existed.
+		if (originalProblem?.id) {
 			history = (await fetchVersionHistoryFromSupabase()) ?? [];
+			// Problem existed but had no version history, so populate the history  now.
+			if (history.length == 0) {
+				await addVersion();
+				history = (await fetchVersionHistoryFromSupabase()) ?? [];
+			}
 		}
 		problemHistory = history;
-		allVersions = reconstructVersions(problemHistory);
+		allVersions = showEditHistory(problemHistory); // Reconstruct full versions for display
+		if (problemHistory.length > 0) {
+			lastVersion = getVersion(problemHistory.length - 1);
+		}
 	}
 
 	// Call `loadHistoryFromSupabase` when the component mounts
@@ -178,15 +186,14 @@
 			timestamp: date,
 		};
 
+		// If there're no previous versions or patches, save the current problem as
+		// the first version.
 		if (problemHistory.length == 0) {
-			problemHistory.push(structuredClone(newVersion));
-			await saveVersionHistoryToSupabase();
+			problemHistory.push(newVersion);
+			await saveVersionToSupabase();
+			lastVersion = structuredClone(newVersion);
 			return;
 		}
-
-		const lastVersion = structuredClone(allVersions[allVersions.length - 1]);
-		console.log("last", lastVersion);
-		console.log("new", newVersion);
 
 		const diffs = {
 			problem: dmp.diff_main(lastVersion.problem, newVersion.problem),
@@ -210,42 +217,56 @@
 			timestamp: date,
 		};
 
-		if (patch.problem.length == 0 && patch.comment.length == 0 && patch.answer.length == 0 && patch.solution.length == 0) {
+		// If there's no difference, don't actually update the problemHistory.
+		if (
+			patch.problem.length == 0 &&
+			patch.comment.length == 0 &&
+			patch.answer.length == 0 &&
+			patch.solution.length == 0
+		) {
 			return;
 		}
 
 		problemHistory.push(patch);
-		await saveVersionHistoryToSupabase();
+		await saveVersionToSupabase();
 
-		allVersions.push(structuredClone(fields));
-		allVersions = allVersions;
+		lastVersion = structuredClone(newVersion);
 	}
 
-	function reconstructVersions(problemHistory) {
-		let reconstructed = {
-			problem: "",
-			comment: "",
-			answer: "",
-			solution: "",
-		};
-		let output = [];
-		for (const h of problemHistory) {
-			if (h.kind == "version") {
-				reconstructed = structuredClone(h);
-			} else if (h.kind == "patch") {
-				reconstructed.problem = applyPatch(reconstructed.problem, h.problem);
-				reconstructed.comment = applyPatch(reconstructed.comment, h.comment);
-				reconstructed.answer = applyPatch(reconstructed.answer, h.answer);
-				reconstructed.solution = applyPatch(reconstructed.solution, h.solution);
-			}
-			output.push(structuredClone(reconstructed));
+	// Reconstruct a full version from patches
+	function getVersion(versionIndex) {
+		if (versionIndex < 0 || versionIndex >= problemHistory.length) {
+			return {
+				problem: "",
+				comment: "",
+				answer: "",
+				solution: "",
+			};
 		}
-		return output;
+
+		let reconstructed = structuredClone(problemHistory[0]);
+
+		for (let i = 1; i <= versionIndex; i++) {
+			if (problemHistory[i].kind == "version") {
+				reconstructed = structuredClone(problemHistory[i]);
+			} else {
+				const patch = problemHistory[i];
+				const p = patch;
+
+				reconstructed.problem = applyPatch(reconstructed.problem, p.problem);
+				reconstructed.comment = applyPatch(reconstructed.comment, p.comment);
+				reconstructed.answer = applyPatch(reconstructed.answer, p.answer);
+				reconstructed.solution = applyPatch(reconstructed.solution, p.solution);
+
+				if (reconstructed.restoredFrom) delete reconstructed.restoredFrom;
+			}
+		}
+
+		return reconstructed;
 	}
 
-	// If the history item is a version, then the prevReconstructedVersion can be null.
-	function highlightedEditHistory(historyItem, prevReconstructedVersion) {
-		let highlighted = {
+	function showEditHistory(problemHistory) {
+		let reconstructed = {
 			problem: "",
 			comment: "",
 			answer: "",
@@ -254,33 +275,58 @@
 			timestamp: "",
 		};
 
-		if (historyItem.kind == "version") {
-			return historyItem;
-		} else if (historyItem.kind == "patch") {
-			const patch = historyItem;
+		let reconstructedVersions = [];
+		let highlightedVersions = [];
 
-			highlighted.problem = highlightChanges(
-				prevReconstructedVersion.problem,
-				patch.problem
-			);
-			highlighted.comment = highlightChanges(
-				prevReconstructedVersion.comment,
-				patch.comment
-			);
-			highlighted.answer = highlightChanges(
-				prevReconstructedVersion.answer,
-				patch.answer
-			);
-			highlighted.solution = highlightChanges(
-				prevReconstructedVersion.solution,
-				patch.solution
-			);
+		problemHistory.forEach((historyItem) => {
+			let highlighted = {
+				problem: "",
+				comment: "",
+				answer: "",
+				solution: "",
+				author: "",
+				timestamp: "",
+			};
 
-			highlighted.author = patch.author;
-			highlighted.timestamp = patch.timestamp;
-		}
+			if (historyItem.kind == "version") {
+				reconstructed = structuredClone(historyItem);
+				highlighted = structuredClone(historyItem);
+			} else if (historyItem.kind == "patch") {
+				const patch = historyItem;
+				const p = patch;
+				const highlight = highlightChanges;
 
-		return highlighted;
+				highlighted.problem = highlight(reconstructed.problem, p.problem);
+				highlighted.comment = highlight(reconstructed.comment, p.comment);
+				highlighted.answer = highlight(reconstructed.answer, p.answer);
+				highlighted.solution = highlight(reconstructed.solution, p.solution);
+
+				reconstructed.problem = applyPatch(reconstructed.problem, p.problem);
+				reconstructed.comment = applyPatch(reconstructed.comment, p.comment);
+				reconstructed.answer = applyPatch(reconstructed.answer, p.answer);
+				reconstructed.solution = applyPatch(reconstructed.solution, p.solution);
+
+				highlighted.author = p.author;
+				highlighted.timestamp = p.timestamp;
+
+				reconstructed.author = p.author;
+				reconstructed.timestamp = p.timestamp;
+
+				if (reconstructed.restoredFrom) delete reconstructed.restoredFrom; // only need for the actual restored version
+				if (highlighted.restoredFrom) delete highlighted.restoredFrom;
+			}
+			highlightedVersions.push(structuredClone(highlighted));
+			reconstructedVersions.push(structuredClone(reconstructed));
+		});
+
+		return highlightedVersions;
+	}
+
+	// Helper function to apply a patch to a string
+	function applyPatch(originalText, diff) {
+		// 'dmp.diff_apply' returns an array where the first element is the updated text
+		const result = dmp.patch_apply(diff, originalText);
+		return result[0];
 	}
 
 	function highlightChanges(originalText, patch) {
@@ -308,11 +354,72 @@
 			.join("");
 	}
 
-	// Helper function to apply a patch to a string
-	function applyPatch(originalText, diff) {
-		// 'dmp.diff_apply' returns an array where the first element is the updated text
-		const result = dmp.patch_apply(diff, originalText);
-		return result[0];
+	// Function to toggle between expanding and collapsing all
+	function toggleAll(event) {
+		event.preventDefault();
+		allExpanded = !allExpanded;
+		document.querySelectorAll(".version").forEach((detail) => {
+			detail.open = allExpanded;
+		});
+	}
+
+	let lastRestoredVersion = null;
+	async function restoreVersion(event, index) {
+		// Save the current open/close state of all details elements
+		const detailsStates = Array.from(document.querySelectorAll(".version")).map(
+			(details) => details.open
+		);
+
+		event.preventDefault();
+		const date = await getPacificTime();
+
+		if (
+			lastRestoredVersion === index ||
+			(index == problemHistory.length - 1 && problemHistory[index].restoredFrom)
+		) {
+			toast.error("This version has just been restored.");
+			return;
+		}
+
+		let version = getVersion(index);
+
+		const restoredVersion = {
+			...version,
+			kind: "version",
+			author: $user.email,
+			restoredFrom: `Version ${index + 1}`,
+			timestamp: date,
+		};
+
+		problemHistory.push(restoredVersion);
+		await saveVersionToSupabase();
+		lastVersion = structuredClone(restoredVersion);
+
+		allVersions = [...allVersions, restoredVersion];
+
+		fields = {
+			problem: restoredVersion.problem ?? fields.problem,
+			comment: restoredVersion.comment ?? fields.comment,
+			answer: restoredVersion.answer ?? fields.answer,
+			solution: restoredVersion.solution ?? fields.solution,
+		};
+
+		setTimeout(() => {
+			// Restore the open/close state of all other details
+			const detailsElements = document.querySelectorAll(".version");
+			detailsStates.forEach((state, i) => {
+				if (detailsElements[i + 1]) {
+					detailsElements[i + 1].open = state;
+				}
+			});
+
+			// Open the newly restored version
+			if (detailsElements[0]) {
+				detailsElements[0].open = true;
+			}
+		}, 0);
+
+		lastRestoredVersion = index;
 	}
 
 	function updateFields() {
@@ -354,7 +461,6 @@
 			const global_topics = await getGlobalTopics();
 			all_topics = [];
 			for (const single_topic of global_topics) {
-				console.log("TOPIC", single_topic)
 				all_topics.push({
 					id: single_topic.id,
 					text: single_topic.topic,
@@ -406,7 +512,26 @@
 						status: status,
 					};
 
+					const detailsStates = Array.from(
+						document.querySelectorAll(".version")
+					).map((details) => details.open);
+
 					await addVersion();
+					allVersions = showEditHistory(problemHistory); // !!! Can definitely make more efficient (all the past versions are already displayed)
+					setTimeout(() => {
+						// Restore the open/close state of all other details
+						const detailsElements = document.querySelectorAll(".version");
+						detailsStates.forEach((state, i) => {
+							if (detailsElements[i + 1]) {
+								detailsElements[i + 1].open = state;
+							}
+						});
+
+						// Open the newly restored version
+						if (detailsElements[0]) {
+							detailsElements[0].open = true;
+						}
+					}, 0);
 
 					submittedText = "Submitting problem...";
 					await onSubmit(payload);
@@ -604,23 +729,45 @@
 
 				<div class="editHistory">
 					<h3>Edit History:</h3>
-					{#if problemHistory && problemHistory.length > 0}
-						{#each problemHistory
-							.map((e, i) => highlightedEditHistory(e, allVersions[i - 1]))
-							.reverse() as version, index}
-							<div
-								class="version"
-								style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px;"
+
+					{#if allVersions && allVersions.length > 0}
+						<!-- Expand/Collapse Toggle Button -->
+						<div style="margin-bottom: 10px;">
+							<button on:click={toggleAll}>
+								{allExpanded ? "Collapse All" : "Expand All"}
+							</button>
+						</div>
+					{/if}
+
+					{#if allVersions && allVersions.length > 0}
+						{#each allVersions.slice().reverse() as version, index}
+							<details
+								class="version {version.restoredFrom ? 'restored-version' : ''}"
 							>
-								<h4>
-									{version.timestamp}, {version.author} (Version {allVersions.length -
-										index})
-								</h4>
-								<p><strong>Problem:</strong> {@html version.problem}</p>
-								<p><strong>Answer:</strong> {@html version.answer}</p>
-								<p><strong>Solution:</strong> {@html version.solution}</p>
-								<p><strong>Comments:</strong> {@html version.comment}</p>
-							</div>
+								<summary>
+									<h4>
+										{version.timestamp}, {version.author} (Version {allVersions.length -
+											index})
+										{#if version.restoredFrom}
+											<span class="restored-label"
+												>[Restored from {version.restoredFrom}]</span
+											>
+										{/if}
+									</h4>
+									<span class="arrow">&#8250;</span>
+								</summary>
+								<div class="details-content">
+									<p><strong>Problem:</strong> {@html version.problem}</p>
+									<p><strong>Answer:</strong> {@html version.answer}</p>
+									<p><strong>Solution:</strong> {@html version.solution}</p>
+									<p><strong>Comments:</strong> {@html version.comment}</p>
+									<button
+										on:click={(event) =>
+											restoreVersion(event, allVersions.length - index - 1)}
+										>Restore Version</button
+									>
+								</div>
+							</details>
 						{/each}
 					{:else}
 						<p>No versions available</p>
@@ -687,10 +834,11 @@
 <style>
 	/* Resizable grid columns. See https://stackoverflow.com/a/53731196 */
 	.editorContainer {
-		grid-template: 1fr 
-		/ min-content 1fr;
+		grid-template:
+			1fr
+			/ min-content 1fr;
 	}
-	
+
 	:global(.editorForm) {
 		padding: 20px;
 	}
@@ -779,28 +927,40 @@
 	p {
 		margin: 5px 0;
 	}
-	/* Styling for added and removed text */
-	.added {
-		color: green;
-		font-weight: bold;
-	}
-	.removed {
-		color: red;
-		text-decoration: line-through;
+
+	summary {
+		display: flex;
+		justify-content: space-between; /* Pushes the arrow to the right */
+		align-items: center; /* Vertically center the text and arrow */
+		cursor: pointer;
 	}
 
-	.editHistory {
-		margin-top: 20px;
-		background: #f5f5f5;
-		padding: 10px;
-		border-radius: 5px;
+	details[open] summary .arrow {
+		transform: rotate(90deg); /* Rotate the arrow 90 degrees */
 	}
 
-	.historyItem {
-		margin-bottom: 15px;
+	.arrow {
+		font-size: 20px;
+		margin-left: 10px;
 	}
 
-	.diffContent {
+	.details-content {
 		padding-left: 20px;
+		transition: max-height 0.3s ease;
+		overflow: hidden;
+	}
+
+	.restored-version .details-content {
+		background-color: #f0f0f0; /* Light gray background */
+		border: 1px solid #ddd; /* Optional: subtle border */
+		padding: 10px;
+		border-radius: 4px; /* Rounded corners for a softer look */
+	}
+
+	.restored-label {
+		font-size: 0.9em;
+		color: #007bff;
+		margin-left: 10px;
+		font-style: italic;
 	}
 </style>
