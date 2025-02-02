@@ -538,6 +538,7 @@
 					submittedText = isDraft ? "Draft Saved" : "Problem Submitted";
 				}
 			} else {
+				isDisabled = false;
 				throw new Error("Not all the required fields have been filled out");
 			}
 		} catch (error) {
