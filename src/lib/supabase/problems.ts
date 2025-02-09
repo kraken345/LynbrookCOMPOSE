@@ -324,6 +324,15 @@ export async function bulkProblems(problems: ProblemRequest[]) {
 	return data;
 }
 
+export async function addEndorsement(endorser_id: number, problem_id: number) {
+	const { data, error } = await supabase
+		.from("endorsements")
+		.insert({ endorser_id, problem_id })
+		.select();
+	if (error) throw error;
+	return data;
+}
+
 /**
  * Edits a specific problem from the database
  *

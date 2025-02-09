@@ -190,7 +190,7 @@
     function sortProblems() {
         console.log("SORTING")
 		const statusOrder = ['Archived', 'Published', 'Draft', 'Idea', 'Endorsed', 'On Test'];
-		const stageOrder = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Complete'];
+		const stageOrder = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Testsolve Received', 'Complete'];
 		problems = problems.sort((a, b) => {
 			const statusComparison = statusOrder.indexOf(b.status) - statusOrder.indexOf(a.status);
             console.log(statusComparison)

@@ -7,7 +7,10 @@
         getThisUser,
         getRandomProblems,
         addProblemFeedback,
-        editProblem
+        editProblem,
+
+		addEndorsement
+
 	} from "$lib/supabase";
     import { handleError } from "$lib/handleError";
 	import toast from "svelte-french-toast";
@@ -46,12 +49,12 @@
     }
 
     function handleEndorse() {
-        if (problemFeedback) {
-			addProblemFeedback([problemFeedback]);
-            editProblem({ status: "Endorsed" }, problemFeedback.problem_id);
-            toast.success("Feedback added")
-		}
-        newProblem();
+      if (problemFeedback) {
+  			addProblemFeedback([problemFeedback]);
+        addEndorsement(user_id, problemFeedback.problem_id);
+        toast.success("Feedback added")
+  		}
+      newProblem();
     }
 
 
