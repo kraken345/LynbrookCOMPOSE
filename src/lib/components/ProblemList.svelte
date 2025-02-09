@@ -126,7 +126,7 @@
 			icon: "ri-feedback-fill",
 			width: "10%",
 			sort: (a, b) => {
-				const order = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Complete'];
+				const order = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Testsolve Received', 'Complete'];
 				return order.indexOf(a) - order.indexOf(b);
 			}
 		},
@@ -436,6 +436,8 @@
 							<Tag type="teal">Awaiting Endorsement</Tag>
 						{:else if cell.value == "Awaiting Testsolve"}
 							<Tag type="cyan">Awaiting Testsolve</Tag>
+						{:else if cell.value == "Testsolve Received"}
+							<Tag type="green">Testsolve Received</Tag>
 						{:else if cell.value == "Complete"}
 							<Tag type="green">Complete</Tag>
 						{:else if cell.value == "Archived"}
