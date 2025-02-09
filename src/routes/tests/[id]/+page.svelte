@@ -273,8 +273,9 @@
 						"topics_short",
 						"sub_topics",
 						"problem_tests",
-						"average_difficulty",
-						"average_quality",
+						"feedback_status",
+						// "average_difficulty",
+						// "average_quality",
 						"unresolved_count",
 					]}
 					customHeaders={[
