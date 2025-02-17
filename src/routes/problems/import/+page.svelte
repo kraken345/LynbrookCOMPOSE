@@ -24,13 +24,6 @@
 	const texRegex =
 		/^(?=\\begin\{question\}\s*(?<question>.*)\s*\\end\{question\})(?=\\begin\{comment\}\s*(?<comment>.*)\s*\\end\{comment\})(?=\\begin\{answer\}\s*(?<answer>.*)\s*\\end\{answer\})(?=\\begin\{solution\}\s*(?<solution>.*)\s*\\end\{solution\}).*$/s;
 
-	const idMap = {
-		Alg: 1,
-		Combo: 2,
-		Geo: 3,
-		NT: 4,
-		Calc: 5,
-	};
 
 	let files;
 	let errorMessages = [];
@@ -235,10 +228,9 @@
 					console.log("error: problem submitted but not found");
 				} else {
 					for (const tp of topics) {
-						if (!idMap[tp]) continue;
 						topicList.push({
 							problem_id: foundProblem.id,
-							topic_id: idMap[tp],
+							topic_id: tp,
 						});
 					}
 				}
