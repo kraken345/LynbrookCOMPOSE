@@ -226,6 +226,32 @@
 		e.target.innerText = original_text;
 	}
 
+	async function downloadTestAsCsv() {
+		try {
+			// console.log("Downloading test as CSV");
+			const csvContent = "";
+			const blob = new Blob([csvContent], { type: "text/csv" });
+			const url = URL.createObjectURL(blob);
+
+			// Create temporary anchor element and set download attributes
+			const link = document.createElement("a");
+    		link.href = url;
+    		link.download = "empty.csv";
+			
+			// Append link to DOM and trigger click to start download
+			document.body.appendChild(link);
+    		link.click();
+
+			// console.log("Downloaded test as CSV");
+			// Remove link and revoke URL
+			document.body.removeChild(link);
+    		URL.revokeObjectURL(url);
+		} catch (error) {
+			handleError(error);
+			toast.error(error.message);
+		}
+	}
+
 	getTest();
 </script>
 
@@ -261,6 +287,8 @@
 			/>
 			<br /><br />
 			<Button href={`/tests/${testId}/feedback`} title="Manage Feedback" />
+			<br /><br />
+			<Button action={downloadTestAsCsv} title="Download Test As CSV" />
 		{/if}
 		{#if loadingProblems}
 			<p>Loading problems...</p>
