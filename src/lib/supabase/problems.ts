@@ -65,6 +65,21 @@ export async function getProblem(problem_id: number) {
 }
 
 /**
+ * Fetches all test_problems with test_id
+ *
+ * @param test_id
+ * @returns problem list
+ */
+export async function getTestProblemsByTestId(test_id: string) {
+	let { data, error } = await supabase
+		.from("test_problems")
+		.select("*")
+		.eq("test_id", test_id);
+	if (error) throw error;
+	return data;
+}
+
+/**
  * Get front id of problem from id
  *
  * @param problem_id
