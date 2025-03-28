@@ -74,6 +74,8 @@
 		<p><strong>Tournament:</strong> {test.tournaments.tournament_name}</p>
 		<p><strong>Description:</strong> {test.test_description}</p>
 		<br />
+		<p>For docs on writing with Typst, see <a href="https://typst.app/docs/reference/">the lovely Typst reference</a> or <a href="https://typst.app/docs/tutorial/">the Typst tutorial</a>!</p>
+		<br />
 		<TypstEditor
 			on_template_save={async (template) => {
 				const { error } = await supabase
