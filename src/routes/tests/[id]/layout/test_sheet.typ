@@ -29,7 +29,7 @@
       month: 4,
       year: 2024,
       team_test: false,
-      display: (answers: true, solutions: true),
+      display: (problems: true, answers: true, solutions: true),
     ),
   )
 } else {
@@ -87,7 +87,7 @@
     // Two column grid with a dividing line.
     #gridx(
       columns: (1in, 1fr),
-      rows: (1fr),
+      rows: 1fr,
       qrcode(id, width: 0.8in, quiet-zone: 0, ecl: "l"),
       align: center + horizon,
       vlinex(),
@@ -131,7 +131,7 @@
   id_box(
     inset: 0pt,
     gridx(
-      columns: (100%),
+      columns: 100%,
       rows: rows.map(_ => 1fr),
       align: start + horizon,
       stroke: 0.5pt,
@@ -162,11 +162,14 @@
         #text(
           weight: "bold",
           18pt,
-          test_metadata.name + " Test (" + if test_metadata.team_test {
-            "Team"
-          } else {
-            "Individual"
-          } + ")",
+          test_metadata.name
+            + " Test ("
+            + if test_metadata.team_test {
+              "Team"
+            } else {
+              "Individual"
+            }
+            + ")",
         ) \ \
         #text(12pt, "Stanford Math Tournament") \
         #v(0pt)
@@ -182,14 +185,21 @@
     )
     #grid(
       columns: (1fr, 1fr),
-      align(center + horizon, written_identification_box), align(center + horizon, identification_sticker_box),
+      align(center + horizon, written_identification_box),
+      align(center + horizon, identification_sticker_box),
     )
     // Add dividing line (and measure it for querying)
     #layout(size => {
       style(styles => {
-        let elem = line(start: (0%, 0%), end: (100% * size.width, 0%), stroke: 1pt)
+        let elem = line(
+          start: (0%, 0%),
+          end: (100% * size.width, 0%),
+          stroke: 1pt,
+        )
         // 1-indexed page counter
-        [#elem #metadata(measure(elem, styles)) #label("header_line_" + str(counter(page).at(location).first() - 1))]
+        [#elem #metadata(measure(elem, styles)) #label(
+            "header_line_" + str(counter(page).at(location).first() - 1),
+          )]
       })
     })
   ]),
@@ -198,7 +208,11 @@
     // Uses 1-1-3 ratios of black-white-black.
     let center_y = -30pt
     let scale = 2
-    for (radius, fill) in ((7pt * scale, black), (5pt * scale, white), (3pt * scale, black)) {
+    for (radius, fill) in (
+      (7pt * scale, black),
+      (5pt * scale, white),
+      (3pt * scale, black),
+    ) {
       place(
         bottom + left,
         dx: -radius,
@@ -224,7 +238,7 @@
       // Two column grid with a dividing line.
       #gridx(
         columns: (0.5in, 1fr),
-        rows: (1fr),
+        rows: 1fr,
         [#{
             i + 1
           }.],
@@ -244,14 +258,16 @@
   columns(
     answer_box_column_count,
     gutter: 11pt,
-    range(problem_count).map(i => {
-      layout(size => {
-        style(styles => {
-          let elem = answer_box(i, size)
-          [#elem #metadata(measure(elem, styles)) #label("box_" + str(i))]
+    range(problem_count)
+      .map(i => {
+        layout(size => {
+          style(styles => {
+            let elem = answer_box(i, size)
+            [#elem #metadata(measure(elem, styles)) #label("box_" + str(i))]
+          })
         })
       })
-    }).join(),
+      .join(),
   )
 }
 
@@ -287,18 +303,22 @@
       columns: (4em, 8em, 1fr, 12em),
       // Left
       align(
-        bottom + left, if not is_local {
-          move(dy: 0.4em, image(width: 3em, height: 3em, "/assets/test_logo.png"))
+        bottom + left,
+        if not is_local {
+          move(
+            dy: 0.4em,
+            image(width: 3em, height: 3em, "/assets/test_logo.png"),
+          )
         },
       ), smallcaps("Stanford Math Tournament"),
       // Center
       align(center, [#smallcaps(test_metadata.name)]),
       // Right
-      align(
-        right,
-      )[#smallcaps(
+      align(right)[#smallcaps(
           datetime(
-            day: test_metadata.day, month: test_metadata.month, year: test_metadata.year,
+            day: test_metadata.day,
+            month: test_metadata.month,
+            year: test_metadata.year,
           ).display("[month repr:long] [day], [year padding:zero repr:full]"),
         )],
     )
@@ -310,33 +330,42 @@
 
 // Typeset problems.
 #let macros = (
-  // Boxing answers
-  "\\ans": ("[1]", "\\boxed{#1}"),
-  // Wrap with absolute value
-  "\\Abs": ("[1]", "\\left\\lVert #1 \\right\\rVert"),
-  // Wrap with < > angle brackets
-  "\\ang": ("[1]", "\\left \\langle #1 \\right \\rangle"),
-  // Set notation {x, y}
-  "\\set": ("[1]", "\\left\\{#1\\right\\}"),
-  // Scaled parentheses
-  "\\paren": ("[1]", "\\left(#1\\right)"),
-  // Floor brackets
-  "\\floor": ("[1]", "\\left\\lfloor #1 \\right\\rfloor"),
-  // Ceiling brackets
-  "\\ceil": ("[1]", "\\left\\lceil #1 \\right\\rceil"),
-  // Vector notation, overarrow
-  "\\VEC": ("[1]", "\\overrightarrow{#1}"),
-  // Modulus operator
-  "\\Mod": ("[1]", "\\enspace(\\text{mod}\\ #1)"),
-).pairs().map(pair => {
-  let (name, value) = pair
-  let (arg_count, body) = value
-  "\\newcommand{" + name + "}" + arg_count + "{" + body + "}"
-}).join()
+  (
+    // Boxing answers
+    "\\ans": ("[1]", "\\boxed{#1}"),
+    // Wrap with absolute value
+    "\\Abs": ("[1]", "\\left\\lVert #1 \\right\\rVert"),
+    // Wrap with < > angle brackets
+    "\\ang": ("[1]", "\\left \\langle #1 \\right \\rangle"),
+    // Set notation {x, y}
+    "\\set": ("[1]", "\\left\\{#1\\right\\}"),
+    // Scaled parentheses
+    "\\paren": ("[1]", "\\left(#1\\right)"),
+    // Floor brackets
+    "\\floor": ("[1]", "\\left\\lfloor #1 \\right\\rfloor"),
+    // Ceiling brackets
+    "\\ceil": ("[1]", "\\left\\lceil #1 \\right\\rceil"),
+    // Vector notation, overarrow
+    "\\VEC": ("[1]", "\\overrightarrow{#1}"),
+    // Modulus operator
+    "\\Mod": ("[1]", "\\enspace(\\text{mod}\\ #1)"),
+  )
+    .pairs()
+    .map(pair => {
+      let (name, value) = pair
+      let (arg_count, body) = value
+      "\\newcommand{" + name + "}" + arg_count + "{" + body + "}"
+    })
+    .join()
+)
 
 #let replace_image(latex, convert) = {
   let no_end_brace = `[^\}]`.text
-  let image_regex = regex(`\\(image|includegraphics)(\[[^\]]*\])*\{(`.text + no_end_brace + `+)\}`.text)
+  let image_regex = regex(
+    `\\(image|includegraphics)(\[[^\]]*\])*\{(`.text
+      + no_end_brace
+      + `+)\}`.text,
+  )
   latex = latex.replace(
     image_regex,
     (m, ..) => {
@@ -347,20 +376,28 @@
   // Super lazy for now, until https://github.com/mitex-rs/mitex/pull/152 is resolved.
   // Regex finitely many nested brace pairs.
   let no_brace = `[^\{\}]`.text
-  let brace_pair_list(center_regex) = no_brace + `*(\{`.text + center_regex + `\}`.text + no_brace + `*)*`.text
+  let brace_pair_list(center_regex) = (
+    no_brace + `*(\{`.text + center_regex + `\}`.text + no_brace + `*)*`.text
+  )
   let nested_brace_pairs(count) = if count == 1 {
     brace_pair_list(no_brace + "*")
   } else {
     brace_pair_list(nested_brace_pairs(count - 1))
   }
-  let boxed_regex = regex(`\\(boxed|ans)\{(`.text + nested_brace_pairs(4) + `)\}`.text)
+  let boxed_regex = regex(
+    `\\(boxed|ans)\{(`.text + nested_brace_pairs(4) + `)\}`.text,
+  )
   latex.replace(
     boxed_regex,
     (m, ..) => {
-      "\\iftypst#pad(y: 4pt, move(dy: -1pt, box(stroke: 0.5pt, inset: (x: 2pt, y: 6pt), [" + mitex-convert(
-        mode: "text",
-        "$" + m.captures.at(1) + "$",
-      ) + "])))\\fi"
+      (
+        "\\iftypst#pad(y: 4pt, move(dy: -1pt, box(stroke: 0.5pt, inset: (x: 2pt, y: 6pt), ["
+          + mitex-convert(
+            mode: "text",
+            "$" + m.captures.at(1) + "$",
+          )
+          + "])))\\fi"
+      )
     },
   )
 }
@@ -376,22 +413,27 @@
 
 #set enum(tight: false)
 #enum(
-  ..problems.enumerate().map(((i, p)) => {
-    let p_typst = convert_to_typst(p.problem_latex)
-    enum.item([
-      #eval(p_typst, mode: "markup", scope: mitex-scope)
+  ..problems
+    .enumerate()
+    .map(((i, p)) => {
+      let p_typst = convert_to_typst(p.problem_latex)
+      enum.item([
+        #if test_metadata.display.problems {
+          eval(p_typst, mode: "markup", scope: mitex-scope)
+        }
 
-      #if test_metadata.display.answers {
-        [
-          *Answer: #eval(convert_to_typst(p.answer_latex), mode: "markup", scope: mitex-scope)*
-        ]
-      }
 
-      #if test_metadata.display.solutions {
-        [
-          *Solution:* #eval(convert_to_typst(p.solution_latex), mode: "markup", scope: mitex-scope)
-        ]
-      }
-    ])
-  }),
+        #if test_metadata.display.answers {
+          [
+            *Answer: #eval(convert_to_typst(p.answer_latex), mode: "markup", scope: mitex-scope)*
+          ]
+        }
+
+        #if test_metadata.display.solutions {
+          [
+            *Solution:* #eval(convert_to_typst(p.solution_latex), mode: "markup", scope: mitex-scope)
+          ]
+        }
+      ])
+    }),
 )
