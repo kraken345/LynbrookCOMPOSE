@@ -84,7 +84,7 @@
 				);
 			})
 		);
-		runCompile();
+		await runCompile();
 		loading = false;
 	});
 
@@ -165,7 +165,7 @@
 </script>
 
 {#if loading}
-	<p>Loading...</p>
+	<p>Loading compiler...</p>
 {/if}
 
 <button on:click={downloadTest}>Download Test</button>
