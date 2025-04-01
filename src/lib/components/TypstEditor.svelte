@@ -162,6 +162,8 @@
 		const svgTarget = document.querySelector("#typst-svg-output");
 		svgTarget.innerHTML = svg;
 	}
+
+	const debouncedCompile = debounce(runCompile, 250);
 </script>
 
 {#if loading}
@@ -220,7 +222,7 @@
 					bind:value={template_body}
 					on:input={() => {
 						dirty = true;
-						debounce(runCompile, 250)();
+						debouncedCompile();
 					}}
 				/>
 			</div>
