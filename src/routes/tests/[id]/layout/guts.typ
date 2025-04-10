@@ -14,7 +14,7 @@
         answer_latex: "5",
         solution_latex: "Hopefully, you find that the left foot has 5, the right foot has 5, and the sum is $10.$ Then, we have $\\frac{10}2 = \\boxed{5\\frac{\\frac{10}{3}2}{1}}.$",
       ),
-      ..range(20).map(i => (
+      ..range(7 * 4 + 1 * 4 * 5).map(i => (
         problem_latex: "Problem # " + str(i),
         answer_latex: "Generic answer",
         solution_latex: "Generic solution",
@@ -185,7 +185,7 @@
 #grid(
   columns: (auto),
   rows: (auto, auto),
-  ..problems.chunks(3).enumerate().map(((i, ps)) => (answer_cell(i, ps, true), answer_cell(i, ps, false))).flatten(),
+  ..problems.chunks(4).enumerate().map(((i, ps)) => (answer_cell(i, ps, true), answer_cell(i, ps, false))).flatten(),
 )
 
 #let problem_cell(i, problems, top_of_page) = {
@@ -203,45 +203,60 @@
     *This is set #{ i + 1 }*
 
     #enum(
-      ..range(calc.min(3, problems.len())).map(index => {
+      ..range(calc.min(4, problems.len())).map(index => {
         // Special hacky case for certain problem for spacing.
         // TODO: @Tweoss (francis) remove this special case image to the right code.
-        if i * 3 + index + 1 == 4 {
+        // if i * 3 + index + 1 == 4 {
+        //   enum.item(
+        //     i * 3 + index + 1,
+        //     grid(
+        //       columns: (auto, 120pt),
+        //       eval(
+        //         convert_to_typst(
+        //           problems.at(index).problem_latex.replace("\n\\image{/image/SMTSemicirclesFinal.png}", ""),
+        //         ),
+        //         mode: "markup",
+        //         scope: mitex-scope,
+        //       ),
+        //       image(
+        //         "problem_images/image/SMTSemicirclesFinal.png",
+        //         height: 120pt,
+        //         fit: "contain",
+        //       ),
+        //     ),
+        //   )
+        // } else {
           enum.item(
-            i * 3 + index + 1,
-            grid(
-              columns: (auto, 120pt),
-              eval(
-                convert_to_typst(
-                  problems.at(index).problem_latex.replace("\n\\image{/image/SMTSemicirclesFinal.png}", ""),
-                ),
-                mode: "markup",
-                scope: mitex-scope,
-              ),
-              image(
-                "problem_images/image/SMTSemicirclesFinal.png",
-                height: 120pt,
-                fit: "contain",
-              ),
-            ),
-          )
-        } else {
-          enum.item(
-            i * 3 + index + 1,
+            i * 4 + index + 1,
             eval(
               convert_to_typst(problems.at(index).problem_latex),
               mode: "markup",
               scope: mitex-scope,
             ),
           )
-        }
+        // }
       }),
     )
   ]
 }
 
+#let usayno_split = 28
+#let (non_usayno, usayno) = (problems.slice(0, usayno_split), problems.slice(usayno_split))
+
 #grid(
   columns: (auto),
   rows: (auto, auto),
-  ..problems.chunks(3).enumerate().map(((i, ps)) => (problem_cell(i, ps, true), problem_cell(i, ps, false))).flatten(),
+  ..non_usayno.chunks(4).enumerate().map(((i, ps)) => (problem_cell(i, ps, true), problem_cell(i, ps, false))).flatten(),
 )
+
+#set page(margin: 40pt)
+
+#enum(..usayno.enumerate().map(
+  ((i, p)) => {
+      enum.item(i + usayno_split + 1, eval(
+        convert_to_typst(p.problem_latex),
+        mode: "markup",
+        scope: mitex-scope
+      ))
+  }
+), tight: false)

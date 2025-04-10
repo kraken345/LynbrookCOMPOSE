@@ -649,58 +649,58 @@ export async function sendFeedbackMessage(problem_feedback: any[]) {
  * Gets a random problem
  */
 export async function getRandomProblems(activeUserId, endorsing = false) {
-	try{
-		console.log("STARTING SEARCH")
+	try {
+		console.log("STARTING SEARCH");
 		// Get problems that weren't written by the user and that the user hasn't given feedback for
 		let query = supabase
-			.from('full_problems')
-			.select('*')
-			.neq('author_id', activeUserId)
-			.eq('archived', false)
+			.from("full_problems")
+			.select("*")
+			.neq("author_id", activeUserId)
+			.eq("archived", false);
 
 		if (endorsing) {
-			query = query.eq('feedback_status', 'Awaiting Endorsement');
+			query = query.gte("feedback_count", 2);
 		} else {
 			let { data: feedback, error } = await supabase
-				.from('problem_feedback')
-				.select('problem_id')
-				.eq('solver_id', activeUserId)
-				.not('problem_id', 'is', null)
-				.eq('resolved', false);
+				.from("problem_feedback")
+				.select("problem_id")
+				.eq("solver_id", activeUserId)
+				.not("problem_id", "is", null)
+				.eq("resolved", false);
 			if (error) throw error;
-			feedback = feedback ? `(${feedback.map(f => f.problem_id).join(", ")})` : "()" // Format as (id1, id2, id3)
-			console.log("FEEDBACK", feedback)
-			query = query.not('id', 'in', feedback);
+			feedback = feedback
+				? `(${feedback.map((f) => f.problem_id).join(", ")})`
+				: "()"; // Format as (id1, id2, id3)
+			console.log("FEEDBACK", feedback);
+			query = query.not("id", "in", feedback);
 		}
-		let { data: problems, error2 } = await query
-		console.log("QUERY", query)
+		let { data: problems, error2 } = await query;
+		console.log("QUERY", query);
 
-		console.log("PROBLEMS", problems)
+		console.log("PROBLEMS", problems);
 
 		if (error2) throw error2;
 
 		problems.sort(() => Math.random() - 0.5);
-		const feedbackStatusOrder = ["Awaiting Feedback", "Awaiting Endorsement", "Awaiting Testsolve", "Needs Review", "Complete"];
 		problems.sort((a, b) => {
-			return feedbackStatusOrder.indexOf(a.feedback_status) - feedbackStatusOrder.indexOf(b.feedback_status);
+			return a.endorsed - b.endorsed;
 		});
-		return problems
-
-		
+		return problems;
 	} catch (error) {
-		console.error('Error fetching random problem:', error.message)
-		return null
+		console.error("Error fetching random problem:", error.message);
+		return null;
 	}
 }
-
-
 
 /**
  * Insert testsolve answers to a problem
  *
  * @param problem_feedback any[]
  */
-export async function addProblemFeedback(problem_feedback: any[], supabaseClient = supabase) {
+export async function addProblemFeedback(
+	problem_feedback: any[],
+	supabaseClient = supabase,
+) {
 	console.log("adding", problem_feedback);
 	const { error: error } = await supabaseClient
 		.from("problem_feedback")
