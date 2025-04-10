@@ -101,6 +101,7 @@
 			toast.success("Successfully updated problem.");
 		}
 		catch (error) { // Catch errors that are made
+			// catch error again
 			handleError(error);
 			toast.error(error.message);
 		}
