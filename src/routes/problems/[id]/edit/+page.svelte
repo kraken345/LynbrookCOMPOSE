@@ -99,7 +99,7 @@
 
 			dirty = false;
 			toast.success("Successfully updated problem.");
-		} catch (error) { // Catch errors
+		} catch (error) { // Catch errors that are made
 			handleError(error);
 			toast.error(error.message);
 		}
