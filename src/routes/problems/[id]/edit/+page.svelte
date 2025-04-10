@@ -16,6 +16,7 @@
 		uploadImage,
 		getThisUser,
 		getProblem,
+		updateProblemThread,
 	} from "$lib/supabase";
 
 	let problem;
@@ -60,28 +61,50 @@
 	};
 
 	async function submitProblem(payload) {
+		try {
+			// Unpack payload and get author
 			const { topics, problem_files, ...payloadNoTopics } = payload;
+			const authorName = await getAuthorName((await getThisUser()).id);
+
+			if (authorName === "") {
+				throw new Error("Author name is not defined");
+			}
+			if (topics.length == 0) {
+				throw new Error("Must specify at least one topic for this problem");
+			}
+
+			// Update problem in supabase "problems" database
 			const data = await editProblem(payloadNoTopics, Number($page.params.id));
 			console.log("DATA", data);
+
+			// Update tags in supabase "problem_topics" database
 			await deleteProblemTopics(data.id);
 			await insertProblemTopics(data.id, payload.topics);
 
-			// delete all files already in the problem
+			// Update problem files
 			const fileList = await getImages(`pb${problem.id}/problem`);
 			if (fileList.length > 0) {
 				await deleteImages(
 					fileList.map((f) => `pb${problem.id}/problem/${f.name}`)
 				);
 			}
-
 			for (const file of problem_files) {
 				await uploadImage(`pb${problem.id}/problem/${file.name}`, file);
 			}
+			
+			// Update discord thread using supabase problem data, authorname, 
+			updateProblemThread(data.id, authorName);
 
 			fetchProblem();
 
 			dirty = false;
 			toast.success("Successfully updated problem.");
+		}
+		catch (error) { // Catch errors that are made
+			// catch error again
+			handleError(error);
+			toast.error(error.message);
+		}
 		/** ENDPOINT NEEDS TO BE FIXED
 		try {
 			// Update discord webhook.

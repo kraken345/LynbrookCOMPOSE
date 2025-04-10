@@ -55,6 +55,171 @@
 		}
 	}
 
+	async function downloadTest(e) {
+		let original_text = e.target.innerText;
+		e.target.innerText = "Processing";
+
+		try {
+			const is_selected = (option) =>
+				selected_values.find((o) => o == option) != undefined;
+			let template_source = testSheet;
+			// TODO: consolidate guts, tiebreakers, and standard typst document layouts.
+			if (
+				test.test_name == "Guts"
+				&& !is_selected("Answers")
+				&& !is_selected("Solutions")
+				&& !is_selected("Standard Layout")
+			) {
+				template_source = gutsSheet;
+			} else if (
+				test.test_name.indexOf("Tiebreaker") != -1 
+			  && !is_selected("Answers") 
+			  && !is_selected("Solutions")
+				&& !is_selected("Standard Layout")
+			) {
+				template_source = tiebreakerSheet;
+			}
+			const answer_template_body = await fetch(template_source ).then((r) => r.text());
+
+			// TODO: @tweoss (francis) get rid of this hack of using test name directly
+			if (test.test_name == "Integration Bee") {
+				// Sort by ascending difficulty.
+				// TODO: why is this using average_difficulty not difficulty?
+				problems = problems.sort(
+					(a, b) => a.average_difficulty - b.average_difficulty
+				);
+				console.log("sorting by difficulty", problems);
+			}
+
+			let utf8Encode = new TextEncoder();
+			let [year, month, day] = test.tournaments.tournament_date
+				.split("-")
+				.map((n) => parseInt(n));
+			const test_metadata = JSON.stringify({
+				name: test.test_name,
+				id: "T" + test.id,
+				day,
+				month,
+				year,
+				team_test: test.is_team, // TODO: label tests in database as team or individual
+				display: {
+					answers: is_selected("Answers"),
+					solutions: is_selected("Solutions"),
+				},
+			});
+			const test_logo = await fetch(scheme.test_logo).then((r) =>
+				r.arrayBuffer()
+			);
+
+			await Typst.resetShadow();
+			await Promise.all([
+				Typst.mapShadow(
+					"/assets/test_metadata.json",
+					utf8Encode.encode(test_metadata)
+				),
+				Typst.mapShadow("/assets/test_logo.png", new Uint8Array(test_logo)),
+				Typst.mapShadow(
+					"/assets/problems.json",
+					utf8Encode.encode(JSON.stringify(problems))
+				),
+				Typst.mapShadow(
+					"/answer_sheet_compiling.toml",
+					utf8Encode.encode("[config]\nlocal = false")
+				),
+				Typst.mapShadow("/main.typ", utf8Encode.encode(answer_template_body)),
+			]);
+			console.log("test metadata", test_metadata);
+
+			let { images, errorList }: { images: ProblemImage[]; errorList: any[] } =
+				(
+					await Promise.all(
+						problems
+							.flatMap((p) => [
+								p.solution_latex,
+								p.problem_latex,
+								p.answer_latex,
+							])
+							.map((latex: string) => ImageBucket.downloadLatexImages(latex))
+					)
+				).reduce((a, e) => {
+					a.errorList = a.errorList.concat(e.errorList);
+					a.images = a.images.concat(e.images);
+					return a;
+				});
+			if (errorList.length > 0) {
+				throw errorList;
+			}
+
+			await Promise.all(
+				images.map(async (image) => {
+					return await Typst.mapShadow(
+						"/problem_images" + image.name,
+						new Uint8Array(await image.blob.arrayBuffer())
+					);
+				})
+			);
+			console.log(images);
+
+			await new Promise((r) => setTimeout(() => r(1), 1000));
+			const pdf_array = await Typst.pdf({ mainFilePath: "/main.typ" });
+			downloadBlob(pdf_array, test.test_name + ".pdf", "application/pdf");
+
+			Typst.getCompiler()
+				.then(
+					async (compiler) =>
+						await Promise.all(
+							["<box_positions>", "<header_lines>"].map((selector) =>
+								compiler.query({
+									mainFilePath: "/main.typ",
+									selector,
+									field: "value",
+								})
+							)
+						)
+				)
+				.then(([box_positions, header_lines]) => {
+					upsertTestAnswerBoxes(
+						test.id,
+						JSON.stringify({
+							box_positions: box_positions[0],
+							header_lines: header_lines[0],
+						})
+					);
+				});
+		} catch (error) {
+			handleError(error);
+			toast.error(error.message);
+		}
+
+		e.target.innerText = original_text;
+	}
+
+	async function downloadTestAsCsv() {
+		try {
+			// console.log("Downloading test as CSV");
+			const csvContent = "";
+			const blob = new Blob([csvContent], { type: "text/csv" });
+			const url = URL.createObjectURL(blob);
+
+			// Create temporary anchor element and set download attributes
+			const link = document.createElement("a");
+    		link.href = url;
+    		link.download = "empty.csv";
+			
+			// Append link to DOM and trigger click to start download
+			document.body.appendChild(link);
+    		link.click();
+
+			// console.log("Downloaded test as CSV");
+			// Remove link and revoke URL
+			document.body.removeChild(link);
+    		URL.revokeObjectURL(url);
+		} catch (error) {
+			handleError(error);
+			toast.error(error.message);
+		}
+	}
+
 	getTest();
 </script>
 
@@ -88,6 +253,8 @@
 			/>
 			<br /><br />
 			<Button href={`/tests/${testId}/feedback`} title="Manage Feedback" />
+			<br /><br />
+			<Button action={downloadTestAsCsv} title="Download Test As CSV" />
 		{/if}
 		{#if loadingProblems}
 			<p>Loading problems...</p>

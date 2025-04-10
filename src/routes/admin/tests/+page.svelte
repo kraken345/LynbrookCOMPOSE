@@ -3,12 +3,20 @@
 	import Button from "$lib/components/Button.svelte";
 	import TestList from "$lib/components/TestList.svelte";
 	import { handleError } from "$lib/handleError.ts";
-	import { getAllTests, getAllTournaments } from "$lib/supabase";
+	import { getAllTests,
+		getAllTournaments, 
+		getTestInfo,
+		getTestProblemsByTestId,
+		getProblem,
+		getImageURL,
+	} from "$lib/supabase";
+	import { json } from "@sveltejs/kit";
 
 	let tournaments = {};
 	let tests = [];
 	let testsArchived = [];
 	let loading = true;
+	let selectedTests = [];
 	console.log("INIT");
 
 	async function getTests() {
@@ -44,6 +52,70 @@
 		}
 	}
 
+	async function handleDownload(selectedTestIds) {
+		if (selectedTestIds.length === 0) {
+			toast.error("No tests selected!");
+			return;
+		}
+		console.log("Downloading tests with IDs:", selectedTestIds);
+		let jsonFile = {
+			tests: [],
+			test_problems: [],
+			problem_images: [],
+			problems: [],
+		};
+		for (let testId of selectedTestIds) {
+			// Get test info
+			let testInfo = await getTestInfo(testId);
+			
+			// Get test problems
+			let testProblems = await getTestProblemsByTestId(testId);
+
+			// Get problems
+			for (let testProblem of testProblems) {
+				let problem = await getProblem(testProblem.problem_id);
+
+				// Push each individual problem and test_problem to json file
+				jsonFile.problems.push(problem);
+				jsonFile.test_problems.push(testProblem);
+
+				// Look through problem_latex for images
+				const matches = [...problem.problem_latex?.matchAll(/\\image\{([^\\}]+)\}/g)];
+				const imageMatches = matches.map((match) => ({
+					fullMatch: match[0],
+					imageName: match[1],
+				}));
+				console.log("IMAGE MATCHES", imageMatches);
+				for (let imageMatch of imageMatches) {
+					let imageURL = await getImageURL(imageMatch.imageName);
+					if (!jsonFile.problem_images.includes(imageURL)) {
+						// fetch from the url and base64 the contents
+						const response = await fetch(imageURL);
+						const arrayBuffer = await response.arrayBuffer();
+						console.log("ARRAY BUFFER", arrayBuffer);
+						const base64data = btoa(
+							String.fromCharCode(...new Uint8Array(arrayBuffer))
+						);
+						console.log("BASE64 DATA", base64data);
+						jsonFile.problem_images.push({
+							path: imageMatch.imageName,
+							base64: base64data,
+						});
+						
+					}
+				}
+			}
+			jsonFile.tests.push(testInfo);
+		}
+		const blob = new Blob([JSON.stringify(jsonFile, null, 2)], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = "tests.json";
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
 	getTournaments();
 </script>
 
@@ -56,12 +128,16 @@
 	Loading up tests...
 {:else}
 	<Button href="/admin/tests/new" title="Create New Test" />
+	<Button
+		title="Download Selected Tests"
+		action={() => handleDownload(selectedTests)}
+	/>
 	<div style="padding: 10px; margin-left: auto; margin-right: auto;">
-		<TestList {tests} />
+		<TestList {tests} selectable={true} bind:selectedItems={selectedTests}/>
 	</div>
 	<br />
 	<h2>Archived Tests</h2>
 	<div style="padding: 10px; margin-left: auto; margin-right: auto;">
-		<TestList tests={testsArchived} />
+		<TestList tests={testsArchived} selectable={true} bind:selectedItems={selectedTests}/>
 	</div>
 {/if}
