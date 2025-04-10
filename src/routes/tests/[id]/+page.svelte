@@ -2,33 +2,15 @@
 	import { page } from "$app/stores";
 	import ProblemList from "$lib/components/ProblemList.svelte";
 	import Button from "$lib/components/Button.svelte";
-	import { Loading, Checkbox } from "carbon-components-svelte";
+	import { Loading } from "carbon-components-svelte";
 	import toast from "svelte-french-toast";
 	import { handleError } from "$lib/handleError";
-	import { downloadBlob } from "$lib/utils/download";
 	import {
 		getTestInfo,
 		getTestProblems,
 		getThisUser,
 		getThisUserRole,
-		upsertTestAnswerBoxes,
 	} from "$lib/supabase";
-	import compilerPath from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
-	import rendererPath from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
-	import { $typst as Typst } from "@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs";
-	import { ImageBucket } from "$lib/ImageBucket";
-	import type { ProblemImage } from "$lib/getProblemImages";
-	import testSheet from "./test_sheet.typ?url";
-	import gutsSheet from "./guts.typ?url";
-	import tiebreakerSheet from "./tiebreaker.typ?url";
-	import * as scheme from "$lib/scheme.json";
-
-	try {
-		Typst.setRendererInitOptions({ getModule: () => rendererPath });
-		Typst.setCompilerInitOptions({ getModule: () => compilerPath });
-	} catch (e) {
-		console.error("compiler may have been initialized", e);
-	}
 
 	let testId = Number($page.params.id);
 	let test;
@@ -37,20 +19,6 @@
 	let loadingProblems = true;
 	let problems = [];
 	let userIsTestCoordinator = false;
-
-	let feedback = [];
-
-	let openModal = false;
-	let values = [
-		"Problems",
-		"Problem ID",
-		"Answers",
-		"Solutions",
-		"Comments",
-		"Feedback",
-		"Standard Layout",
-	];
-	let selected_values = values.slice(0, 1);
 
 	async function getTest() {
 		try {
@@ -280,10 +248,8 @@
 			<Button href={`/tests/${testId}/testsolve`} title="Manage testsolves" />
 			<br /><br />
 			<Button
-				action={() => {
-					openModal = !openModal;
-				}}
-				title="Open Test"
+				href={`/tests/${testId}/layout`}
+				title="Print Test"
 			/>
 			<br /><br />
 			<Button href={`/tests/${testId}/feedback`} title="Manage Feedback" />
@@ -293,55 +259,26 @@
 		{#if loadingProblems}
 			<p>Loading problems...</p>
 		{:else}
-			<div style="width: 80%; margin: auto; padding: 20px;">
+			<div style="width: 90%; margin: auto; padding: 20px;">
 				<ProblemList
 					{problems}
-					showList={[
+					showList={JSON.parse(localStorage.getItem("problem-list.show-list")) ?? [
 						"full_name",
 						"topics_short",
 						"sub_topics",
 						"problem_tests",
-						"average_difficulty",
-						"average_quality",
+						// "feedback_status",
+						// "average_difficulty",
+						// "average_quality",
 						"unresolved_count",
 					]}
 					customHeaders={[
 						{ key: "problem_number", value: "", icon: "ri-hashtag" },
+						{ key: "endorse_link", value: "Endorse" },
 					]}
 				/>
 			</div>
 		{/if}
 	</div>
-
-	{#if openModal}
-		<div
-			class="flex"
-			style="background-color: rgba(0,0,0,0.5); position: absolute; top: 0; bottom: 0;right:0;left: 0;z-index: 100;"
-		>
-			<div
-				style="width: 300px; height: max-content; z-index: 101;background-color: white;padding: 10px;position: relative;"
-			>
-				<div style="position: absolute; top: 5px; right: 8px;">
-					<button
-						on:click={() => {
-							openModal = !openModal;
-						}}
-						style="font-size: 12px;cursor:pointer;outline: none;border: none;background: none;"
-						><i class="fa-solid fa-x" /></button
-					>
-				</div>
-
-				<p><strong>PDF Options</strong></p>
-
-				{#each values as value}
-					<Checkbox bind:group={selected_values} labelText={value} {value} />
-				{/each}
-
-				<br />
-				<button on:click={downloadTest}>Download Test</button>
-				<br /><br />
-			</div>
-		</div>
-	{/if}
 {/if}
 <br />

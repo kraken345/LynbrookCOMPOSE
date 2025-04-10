@@ -45,7 +45,7 @@
 				});
 			}
 			roles2.sort((a, b) => {
-				return a.name.toLowerCase().localeCompare(b.name.toUpperCase());
+				return a.name?.toLowerCase()?.localeCompare(b.name?.toUpperCase());
 			});
 			roles = roles2;
 			loading = false;

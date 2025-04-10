@@ -99,10 +99,6 @@
 
 			dirty = false;
 			toast.success("Successfully updated problem.");
-		} catch (error) {
-			handleError(error);
-			toast.error(error.message);
-		}
 		/** ENDPOINT NEEDS TO BE FIXED
 		try {
 			// Update discord webhook.

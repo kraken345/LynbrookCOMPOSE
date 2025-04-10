@@ -8,7 +8,7 @@
 		ToolbarSearch,
 		Pagination,
 		MultiSelect,
-		Tag
+		Tag,
 	} from "carbon-components-svelte";
 	import Rating from "$lib/components/Rating.svelte";
 	import { formatDate } from "$lib/formatDate.js";
@@ -16,7 +16,7 @@
 	import { sortIDs } from "$lib/sortIDs";
 	import Switcher from "carbon-icons-svelte/lib/Switcher.svelte";
 	import { createEventDispatcher } from "svelte";
-	import { Filter } from "carbon-icons-svelte";
+	import { Filter, Trophy } from "carbon-icons-svelte";
 	import toast from "svelte-french-toast";
 	import { handleError } from "$lib/handleError.ts";
 	import { LogarithmicScale } from "chart.js";
@@ -35,16 +35,21 @@
 	export let pageEnabled = true;
 	export let minWidth = 100;
 
-	export let showList = [
-		"full_name",
-		"topics_short",
-		"average_difficulty",
-		"average_quality",
-		"status",
-		"feedback_status",
-		"problem_tests",
-		"created_at"
-	];
+	export let showList = null;
+
+	// If showList is passed as null by the parent page, then we want to override
+	// with this default list.
+	if (!showList) {
+		showList = [
+			"full_name",
+			"topics_short",
+			"status",
+			"endorsed",
+			"unresolved_count",
+			"problem_tests",
+			"created_at",
+		];
+	}
 
 	const dispatch = createEventDispatcher();
 
@@ -71,42 +76,47 @@
 			value: "Author",
 			short: "Author",
 			icon: "ri-user-fill",
-			width: "10%"
+			width: "10%",
 		},
 		{
 			key: "topics_short",
 			value: "Topics",
 			short: "Topics",
 			icon: "ri-pie-chart-2-fill",
-			width: "15%"
+			width: "12%",
 		},
 		{
 			key: "sub_topics",
 			value: "Subtopics",
 			short: "SubTps",
 			icon: "ri-node-tree",
-			width: "20%"
+			width: "15%",
 		},
 		{
 			key: "average_difficulty",
 			value: "Difficulty",
 			short: "Diff",
 			icon: "ri-bar-chart-2-fill",
-			width: "7%"
+			width: "7%",
 		},
 		{
 			key: "average_quality",
 			value: "Quality",
 			short: "Qlty",
 			icon: "ri-star-fill",
-			width: "7%"
+			width: "7%",
 		},
 		{
 			key: "unresolved_count",
-			value: "Feedback",
-			short: "Fdbk",
+			value: "Unresolved",
 			icon: "ri-flag-fill",
-			width: "10%"
+			width: "10%",
+		},
+		{
+			key: "feedback_count",
+			value: "Feedback",
+			icon: "ri-flag-fill",
+			width: "10%",
 		},
 		{
 			key: "status",
@@ -115,33 +125,45 @@
 			icon: "ri-stairs-fill",
 			width: "10%",
 			sort: (a, b) => {
-				const order = ['Draft', 'Idea', 'Endorsed', 'On Test', 'Published', 'Archived'];
+				const order = [
+					"Draft",
+					"Idea",
+					"Endorsed",
+					"On Test",
+					"Published",
+					"Archived",
+				];
 				return order.indexOf(a) - order.indexOf(b);
-			}
+			},
 		},
 		{
-			key: "feedback_status",
-			value: "Status",
-			short: "Status",
+			key: "endorsed",
+			value: "Endorsed",
+			short: "Endorsed",
 			icon: "ri-feedback-fill",
 			width: "10%",
-			sort: (a, b) => {
-				const order = ['Needs Review', 'Awaiting Feedback', 'Awaiting Endorsement', 'Awaiting Testsolve', 'Complete'];
-				return order.indexOf(a) - order.indexOf(b);
-			}
+			sort: (a, b) => (a == null ? 1 : 0) - (b == null ? 1 : 0),
+		},
+		{
+			key: "endorse_link",
+			value: "Endorse",
+			short: "Endorse",
+			icon: "ri-feedback-fill",
+			width: "10%",
 		},
 		{
 			key: "problem_tests",
 			value: "Tests",
 			short: "Tests",
 			icon: "ri-file-list-3-fill",
-			width: "15%"
+			width: "15%",
 		},
 		{
 			key: "created_at",
 			value: "Created",
 			short: "Create",
 			icon: "ri-calendar-event-fill",
+			width: "12%",
 		},
 		{
 			key: "edited_at",
@@ -149,7 +171,6 @@
 			icon: "ri-calendar-todo-fill",
 		},
 	];
-
 
 	$: headersF = headers.filter((row) => showList.includes(row.key));
 	$: curHeaders = [
@@ -211,14 +232,10 @@
 		try {
 			if (!draggable) return;
 			if (!draggingRow) return;
-			if (row === draggedRow) return;
-
-			e.preventDefault();
 			const ind = problems.indexOf(row);
 			lastDraggedInd = ind;
-			problems.splice(problems.indexOf(draggedRow), 1);
-			problems.splice(ind, 0, draggedRow);
-			problems = problems;
+			if (row === draggedRow) return;
+			e.preventDefault();
 		} catch (error) {
 			handleError(error);
 			toast.error(error.message);
@@ -248,6 +265,12 @@
 <div bind:clientWidth={width} class="align-items: right; display: flex;">
 	<MultiSelect
 		bind:selectedIds={showList}
+		on:select={({ detail }) => {
+			localStorage.setItem(
+				"problem-list.show-list",
+				JSON.stringify(detail.selectedIds)
+			);
+		}}
 		direction="top"
 		size="sm"
 		label="Filter visible columns"
@@ -277,8 +300,16 @@
 				text: "Stage",
 			},
 			{
-				id: "feedback_status",
-				text: "Status",
+				id: "endorsed",
+				text: "Endorsed",
+			},
+			{
+				id: "unresolved_count",
+				text: "Unresolved",
+			},
+			{
+				id: "feedback_count",
+				text: "Feedback",
 			},
 			{
 				id: "problem_tests",
@@ -292,14 +323,12 @@
 				id: "edited_at",
 				text: "Edited on",
 			},
-			
 		]}
 	/>
 </div>
 
-
-
 <div
+	{width}
 	class="flex-dir-col"
 	on:dragover={(e) => e.preventDefault()}
 	bind:this={tableContainerDiv}
@@ -357,7 +386,16 @@
 						style="visibility: {disableAll ? 'hidden' : 'visible'}"
 						class="drag-div"
 					>
-						<div style="margin-left: 10px;"><Switcher /></div>
+						<div
+							style="margin-left: 10px;"
+							class={problems.findIndex(
+								(p) => p.id == row.id && p.id != draggedRow?.id
+							) == lastDraggedInd
+								? "target-div"
+								: ""}
+						>
+							<Switcher />
+						</div>
 					</div>
 				{:else if cell.key === "problem_number"}
 					<div>
@@ -394,6 +432,10 @@
 					<div style="overflow: hidden;">
 						{cell.value ?? 0}
 					</div>
+				{:else if cell.key === "feedback_count"}
+					<div style="overflow: hidden;">
+						{cell.value ?? 0}
+					</div>
 				{:else if cell.key === "average_difficulty" || cell.key === "average_quality"}
 					<div
 						style="overflow: hidden; display: flex; align-items: flex-start;"
@@ -424,23 +466,21 @@
 							<Tag type="high-contrast">Archived</Tag>
 						{/if}
 					</div>
-				{:else if cell.key === "feedback_status"}
+				{:else if cell.key === "endorsed"}
 					<div
 						style="overflow: hidden; display: flex; align-items: flex-start;"
 					>
-						{#if cell.value == "Needs Review"}
-							<Tag type="magenta">Needs Review</Tag>
-						{:else if cell.value == "Awaiting Feedback"}
-							<Tag type="blue">Awaiting Feedback</Tag>
-						{:else if cell.value == "Awaiting Endorsement"}
-							<Tag type="teal">Awaiting Endorsement</Tag>
-						{:else if cell.value == "Awaiting Testsolve"}
-							<Tag type="cyan">Awaiting Testsolve</Tag>
-						{:else if cell.value == "Complete"}
-							<Tag type="green">Complete</Tag>
-						{:else if cell.value == "Archived"}
-							<Tag type="high-contrast">Archived</Tag>
+						{#if cell.value}
+							<Tag type="green">{cell.value}</Tag>
+						{:else}
+							<Tag type="red">{"none"}</Tag>
 						{/if}
+					</div>
+				{:else if cell.key === "endorse_link"}
+					<div class="pencil">
+						<Link class="link" href={`/problems/endorse?problem_id=${row.id}`}>
+							<Trophy />
+						</Link>
 					</div>
 				{:else if cell.key === "problem_tests"}
 					<div
@@ -482,6 +522,11 @@
 		align-items: center;
 		justify-content: center;
 		cursor: grab;
+	}
+
+	.target-div {
+		background-color: blue;
+		opacity: 20%;
 	}
 
 	.rating {
