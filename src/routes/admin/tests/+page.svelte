@@ -89,7 +89,19 @@
 				for (let imageMatch of imageMatches) {
 					let imageURL = await getImageURL(imageMatch.imageName);
 					if (!jsonFile.problem_images.includes(imageURL)) {
-						jsonFile.problem_images.push(imageURL);
+						// fetch from the url and base64 the contents
+						const response = await fetch(imageURL);
+						const arrayBuffer = await response.arrayBuffer();
+						console.log("ARRAY BUFFER", arrayBuffer);
+						const base64data = btoa(
+							String.fromCharCode(...new Uint8Array(arrayBuffer))
+						);
+						console.log("BASE64 DATA", base64data);
+						jsonFile.problem_images.push({
+							path: imageMatch.imageName,
+							base64: base64data,
+						});
+						
 					}
 				}
 			}
