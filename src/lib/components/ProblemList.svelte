@@ -93,11 +93,18 @@
 			width: "15%",
 		},
 		{
-			key: "average_difficulty",
+			key: "difficulty",
 			value: "Difficulty",
 			short: "Diff",
 			icon: "ri-bar-chart-2-fill",
-			width: "7%",
+			width: "15%",
+		},
+		{
+			key: "average_difficulty",
+			value: "Avg Difficulty",
+			short: "AvgDiff",
+			icon: "ri-bar-chart-2-fill",
+			width: "15%",
 		},
 		{
 			key: "average_quality",
@@ -288,6 +295,10 @@
 				text: "SubTopic",
 			},
 			{
+				id: "difficulty",
+				text: "Difficulty",
+			},
+			{
 				id: "average_difficulty",
 				text: "Avg. Difficulty",
 			},
@@ -436,7 +447,7 @@
 					<div style="overflow: hidden;">
 						{cell.value ?? 0}
 					</div>
-				{:else if cell.key === "average_difficulty" || cell.key === "average_quality"}
+				{:else if cell.key === "average_difficulty" || cell.key === "average_quality" || cell.key === "difficulty"}
 					<div
 						style="overflow: hidden; display: flex; align-items: flex-start;"
 					>
