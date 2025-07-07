@@ -18,29 +18,29 @@
 		"goal": 100
 	},
 	"styles": {
-		"text-color-light": "#fff",
-		"text-color-dark": "#000",
-		"background": "#FFFBF0",
-		"background-dark": "#FFF4D7",
-		"primary": "#981C1D",
-		"primary-light": "#dc7291",
-		"primary-dark": "#65100f",
-		"primary-tint": "#e9d8d8",
-		"secondary": "#71816D",
-		"secondary-light": "#b4cfae",
-		"secondary-dark": "#485445",
-		"secondary-tint": "#e3f2df",
+		"text-color-light": "#FFFFFF",
+		"text-color-dark": "#121212",
+		"background": "#F0F0F0",
+		"background-dark": "#1A1A1A",
+		"primary": "#C8102E",
+		"primary-light": "#FF4C5B",
+		"primary-dark": "#8B0017",
+		"primary-tint": "#FFD9DD",
+		"secondary": "#005A9C",
+		"secondary-light": "#4DA1FF",
+		"secondary-dark": "#003B66",
+		"secondary-tint": "#D6EFFF",
 		"font-family": "Source Sans Pro"
 	},
 	"constants": {
-		"white": "#fff",
-		"incorrect": "#ff9999",
-		"incorrect-text": "#AD2828",
-		"unsure": "#FFFB99",
+		"white": "#FFFFFF",
+		"incorrect": "#FF4C4C",
+		"incorrect-text": "#8B0000",
+		"unsure": "#FFF27F",
 		"unsure-text": "#7C7215",
-		"correct": "#9BFF99",
+		"correct": "#4CFF4C",
 		"correct-text": "#157C20",
-		"return": "#999999",
-		"return-text": "#282828"
+		"return": "#A9A9A9",
+		"return-text": "#1C1C1C"
 	}
 }
